@@ -81,8 +81,10 @@
             }
             link.href = URL.createObjectURL(manifestBlob);
 
-            document.getElementById('meta-theme-color').content = themeColor;
-            document.getElementById('page-title').innerText = appName;
+            const metaColor = document.getElementById('meta-theme-color');
+            if (metaColor) metaColor.content = themeColor;
+            const pageTitle = document.getElementById('page-title');
+            if (pageTitle) pageTitle.innerText = appName;
         };
 
         window.addEventListener('load', () => {
@@ -162,6 +164,7 @@
         .floating-btn { position: fixed; bottom: 24px; right: 24px; z-index: 40; transition: all 0.3s ease; }
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
         .slide-up-animation { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .lucide { pointer-events: none; } /* Prevents SVGs from blocking clicks */
     </style>
 </head>
 <body class="sys-bg-body sys-text-primary font-sans antialiased min-h-screen flex flex-col lg:pl-[280px]">
@@ -180,25 +183,25 @@
             </div>
             
             <div class="flex items-center gap-2 sm:gap-3">
-                <button id="install-btn" onclick="window.installApp()" class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-900 text-white text-sm font-bold rounded-lg hover:bg-blue-800 transition-colors shadow-sm">
+                <button id="install-btn" onclick="window.installApp()" class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-900 text-white text-sm font-bold rounded-lg hover:bg-blue-800 transition-colors shadow-sm cursor-pointer">
                     <i data-lucide="download" class="w-4 h-4"></i> Instalar
                 </button>
-                <button onclick="window.cycleFontSize()" class="p-2 sys-text-secondary hover:sys-text-accent rounded-lg transition-colors" title="Tamanho da Letra">
+                <button onclick="window.cycleFontSize()" class="p-2 sys-text-secondary hover:sys-text-accent rounded-lg transition-colors cursor-pointer" title="Tamanho da Letra">
                     <i data-lucide="type" class="w-5 h-5"></i>
                 </button>
                 <div class="relative">
-                    <button onclick="window.toggleThemeMenu(event)" class="p-2 sys-text-secondary hover:sys-text-accent rounded-lg transition-colors" title="Temas">
+                    <button onclick="window.toggleThemeMenu(event)" class="p-2 sys-text-secondary hover:sys-text-accent rounded-lg transition-colors cursor-pointer" title="Temas">
                         <i data-lucide="palette" class="w-5 h-5"></i>
                     </button>
                     <div id="theme-menu" class="hidden absolute right-0 mt-2 w-48 sys-bg-surface sys-border border rounded-xl shadow-2xl py-2 z-50">
                         <p class="px-4 py-2 text-xs font-bold uppercase tracking-wider sys-text-secondary border-b sys-border mb-2">Temas</p>
-                        <button onclick="window.setSiteTheme('light', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Claro</button>
-                        <button onclick="window.setSiteTheme('dark', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Escuro</button>
-                        <button onclick="window.setSiteTheme('polen', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Pólen</button>
-                        <button onclick="window.setSiteTheme('cafe', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Café</button>
-                        <button onclick="window.setSiteTheme('verde', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Verde</button>
-                        <button onclick="window.setSiteTheme('azul', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Azul</button>
-                        <button onclick="window.setSiteTheme('vermelho', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Vermelho</button>
+                        <button onclick="window.setSiteTheme('light', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3 cursor-pointer">Claro</button>
+                        <button onclick="window.setSiteTheme('dark', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3 cursor-pointer">Escuro</button>
+                        <button onclick="window.setSiteTheme('polen', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3 cursor-pointer">Pólen</button>
+                        <button onclick="window.setSiteTheme('cafe', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3 cursor-pointer">Café</button>
+                        <button onclick="window.setSiteTheme('verde', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3 cursor-pointer">Verde</button>
+                        <button onclick="window.setSiteTheme('azul', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3 cursor-pointer">Azul</button>
+                        <button onclick="window.setSiteTheme('vermelho', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3 cursor-pointer">Vermelho</button>
                     </div>
                 </div>
             </div>
@@ -212,7 +215,7 @@
     <aside id="sidebar-menu" class="fixed top-0 left-0 h-full w-[280px] sys-bg-surface shadow-2xl lg:shadow-[4px_0_24px_rgba(0,0,0,0.04)] z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col border-r sys-border">
         <div class="p-6 flex justify-between items-center sys-border border-b bg-gray-50/5 sys-bg-body">
             <span class="font-black text-xl sys-text-primary flex items-center gap-2"><i data-lucide="compass" class="w-6 h-6 sys-text-accent"></i> Menu</span>
-            <button onclick="window.toggleMobileMenu()" class="p-2 rounded-full sys-bg-surface sys-border border transition-colors lg:hidden"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <button onclick="window.toggleMobileMenu()" class="p-2 rounded-full sys-bg-surface sys-border border transition-colors lg:hidden cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
         <div class="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-6">
             <a href="#" onclick="window.clearFilter(); window.showHome(); window.toggleMobileMenu(); return false;" class="flex items-center gap-4 font-bold text-lg sys-text-primary hover:sys-text-accent transition-colors"><i data-lucide="home" class="w-5 h-5"></i> Início</a>
@@ -221,7 +224,7 @@
             
             <div class="flex flex-col gap-2 mt-2">
                 <p class="text-[10px] font-black uppercase tracking-widest sys-text-secondary mb-2 pl-1">Explorar</p>
-                <button onclick="window.toggleCategories(event)" class="flex items-center justify-between w-full text-left sys-text-primary hover:sys-text-accent font-bold text-lg transition-colors py-1">
+                <button onclick="window.toggleCategories(event)" class="flex items-center justify-between w-full text-left sys-text-primary hover:sys-text-accent font-bold text-lg transition-colors py-1 cursor-pointer">
                     <span class="flex items-center gap-4"><i data-lucide="folder" class="w-5 h-5"></i> Pastas</span>
                     <i data-lucide="chevron-down" id="cat-chevron" class="w-4 h-4 transition-transform duration-300"></i>
                 </button>
@@ -246,7 +249,7 @@
                 <button onclick="window.shareApp()" class="flex items-center gap-4 font-bold text-sm sys-text-primary hover:sys-text-accent transition-colors py-1 cursor-pointer">
                     <div class="p-2 sys-bg-body rounded-lg sys-border border"><i data-lucide="share-2" class="w-4 h-4"></i></div> Indicar a App
                 </button>
-                <button onclick="window.shareCommunityLink()" class="flex items-center gap-4 font-bold text-sm sys-text-primary hover:text-green-600 transition-colors py-1">
+                <button onclick="window.shareCommunityLink()" class="flex items-center gap-4 font-bold text-sm sys-text-primary hover:text-green-600 transition-colors py-1 cursor-pointer">
                     <div class="p-2 sys-bg-body rounded-lg sys-border border"><i data-lucide="message-circle" class="w-4 h-4 text-green-600"></i></div> Indicar Comunidade
                 </button>
             </div>
@@ -261,7 +264,7 @@
     <!-- Main Content: Home (Posts) -->
     <main id="home-view" class="flex-grow max-w-3xl w-full mx-auto px-4 py-8 pb-28 sm:pb-8 z-10 fade-enter">
         <div class="mb-8 border-b sys-border pb-6" id="feed-header">
-            <!-- Renderizado via JS para usar o Config dinâmico -->
+            <!-- Renderizado via JS -->
         </div>
         <div id="feed-container" class="flex flex-col gap-6"></div>
     </main>
@@ -359,7 +362,7 @@
         </div>
     </main>
 
-    <!-- VIEW: BIOGRAFIA DO PROFESSOR (Editável no Painel) -->
+    <!-- VIEW: BIOGRAFIA DO PROFESSOR -->
     <main id="bio-view" class="hidden flex-grow max-w-3xl w-full mx-auto px-4 py-8 pb-28 sm:pb-8 z-10 fade-enter">
         <div class="mb-8 border-b sys-border pb-6">
             <button onclick="window.showHome()" class="flex items-center gap-2 sys-text-accent font-bold group hover:opacity-80 transition-all py-2 cursor-pointer">
@@ -367,9 +370,7 @@
             </button>
         </div>
         
-        <!-- Biografia renderizada do Firebase -->
         <div id="bio-content-area" class="prose max-w-none sys-text-primary text-base sm:text-lg leading-relaxed space-y-6 pb-10">
-            <!-- Loading fallback -->
             <p class="text-center opacity-50">A carregar informações...</p>
         </div>
     </main>
@@ -428,7 +429,7 @@
     </div>
 
     <!-- Admin Dashboard -->
-    <div id="dashboard-modal" class="hidden fixed inset-0 z-[80] flex items-center justify-center modal-overlay px-4">
+    <div id="dashboard-modal" class="hidden fixed inset-0 z-[80] flex items-center justify-center modal-overlay px-4" onclick="if(event.target === this) window.closeDashboard()">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col relative overflow-hidden">
             <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                 <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2"><i data-lucide="layout-dashboard" class="w-6 h-6 text-blue-900"></i> Painel de Controlo</h3>
@@ -504,8 +505,9 @@
                             <label class="block text-sm font-bold text-gray-700 mb-1">Nome da App / Educador</label>
                             <input type="text" id="config-app-name" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-pink-700 bg-white text-sm mb-3">
                             
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Link do Logo (URL de Imagem quadrada)</label>
-                            <input type="text" id="config-app-logo" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-pink-700 bg-white text-sm mb-4">
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Link do Logótipo (URL direta ou Google Drive)</label>
+                            <input type="text" id="config-app-logo" placeholder="Ex: https://drive.google.com/file/d/..." class="w-full border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-pink-700 bg-white text-sm mb-4">
+                            <p class="text-[10px] text-gray-500 -mt-3 mb-4">Nota: O logótipo altera automaticamente a imagem no cabeçalho e o ícone da aplicação no telemóvel.</p>
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
@@ -587,7 +589,7 @@
     </div>
 
     <!-- Editor de Reflexões -->
-    <div id="editor-modal" class="hidden fixed inset-0 z-[90] flex items-center justify-center modal-overlay px-4 py-4">
+    <div id="editor-modal" class="hidden fixed inset-0 z-[90] flex items-center justify-center modal-overlay px-4 py-4" onclick="if(event.target === this) window.closeEditor()">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-full flex flex-col relative overflow-hidden text-gray-900">
             <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50"><h3 id="editor-title" class="text-xl font-bold text-gray-900">Novo Conteúdo</h3><button onclick="window.closeEditor()" class="p-2 text-gray-400 hover:text-gray-600 cursor-pointer"><i data-lucide="x" class="w-6 h-6"></i></button></div>
             <div class="p-6 flex-1 overflow-y-auto flex flex-col gap-6">
@@ -617,7 +619,7 @@
     </div>
 
     <!-- Editor de Cursos -->
-    <div id="course-editor-modal" class="hidden fixed inset-0 z-[90] flex items-center justify-center modal-overlay px-4 py-4">
+    <div id="course-editor-modal" class="hidden fixed inset-0 z-[90] flex items-center justify-center modal-overlay px-4 py-4" onclick="if(event.target === this) window.closeCourseEditor()">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-full flex flex-col relative overflow-hidden text-gray-900">
             <div class="p-5 border-b flex justify-between items-center bg-purple-50/50"><h3 id="course-editor-title" class="text-xl font-bold text-purple-900">Curso</h3><button onclick="window.closeCourseEditor()" class="p-2 text-gray-400 hover:text-gray-600 cursor-pointer"><i data-lucide="x" class="w-6 h-6"></i></button></div>
             <div class="p-6 flex-1 overflow-y-auto flex flex-col gap-6">
@@ -673,7 +675,7 @@
     </div>
 
     <!-- Editor de Livros -->
-    <div id="book-editor-modal" class="hidden fixed inset-0 z-[90] flex items-center justify-center modal-overlay px-4 py-4">
+    <div id="book-editor-modal" class="hidden fixed inset-0 z-[90] flex items-center justify-center modal-overlay px-4 py-4" onclick="if(event.target === this) window.closeBookEditor()">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-full flex flex-col relative overflow-hidden text-gray-900">
             <div class="p-5 border-b flex justify-between items-center bg-green-50/50"><h3 id="book-editor-title" class="text-xl font-bold text-green-900">Livro</h3><button onclick="window.closeBookEditor()" class="p-2 text-gray-400 hover:text-gray-600 cursor-pointer"><i data-lucide="x" class="w-6 h-6"></i></button></div>
             <div class="p-6 flex-1 overflow-y-auto flex flex-col gap-6">
@@ -726,10 +728,6 @@
             </div>
             <div class="p-6 border-t bg-gray-50 flex justify-between"><button id="btn-delete-book" onclick="window.deleteBook(document.getElementById('edit-book-id').value)" class="hidden px-5 py-2.5 text-red-600 font-bold hover:bg-red-50 rounded-xl transition-colors cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4 inline mr-2"></i> Excluir</button><div class="flex gap-3 ml-auto"><button onclick="window.closeBookEditor()" class="px-6 py-2.5 border border-gray-300 rounded-xl font-medium hover:bg-gray-100 cursor-pointer">Cancelar</button><button onclick="window.saveBook()" id="btn-save-book" class="px-8 py-2.5 bg-green-700 text-white rounded-xl font-bold shadow-lg hover:bg-green-800 cursor-pointer">Guardar Material</button></div></div>
         </div>
-    </div>
-
-    <div id="toast" class="fixed bottom-6 right-6 bg-green-700 text-white px-8 py-4 rounded-2xl shadow-2xl transform transition-transform duration-300 translate-y-32 opacity-0 z-[100] flex items-center gap-3 font-bold border-b-4 border-green-900 pointer-events-none">
-        <i data-lucide="check-circle" class="w-6 h-6"></i> <span id="toast-msg">Ação concluída!</span>
     </div>
 
     <script type="module">
@@ -1023,7 +1021,17 @@
             list.innerHTML = window.siteCourses.map(c => {
                 let badge = ''; const hasPres = c.hasPresential; const hasOn = c.hasOnline;
                 if(hasPres && hasOn) badge = 'Híbrido'; else if(hasPres) badge = 'Presencial'; else badge = 'Online';
-                return `<div class="flex items-center gap-4 p-3 border border-gray-200 rounded-xl bg-white shadow-sm cursor-pointer hover:border-purple-600 transition-colors" onclick="window.editCourse('${c.id}')"><img src="${window.getDriveImageUrl(c.cover)}" class="w-12 h-16 object-cover rounded bg-gray-100" onerror="this.src='https://via.placeholder.com/48x64?text=Curso'"><div class="flex-1 truncate"><p class="font-bold text-gray-900 text-sm truncate">${c.title}</p><p class="text-xs text-purple-600 mt-0.5 font-bold uppercase tracking-wider">${badge}</p></div><div class="flex gap-2 shrink-0"><button class="p-3 bg-purple-50 text-purple-900 rounded-lg hover:bg-purple-100 transition-colors cursor-pointer"><i data-lucide="edit-3" class="w-4 h-4"></i></button></div></div>`;
+                return `
+                    <div class="flex items-center gap-4 p-3 border border-gray-200 rounded-xl bg-white shadow-sm cursor-pointer hover:border-purple-600 transition-colors" onclick="window.editCourse('${c.id}')">
+                        <img src="${window.getDriveImageUrl(c.cover)}" class="w-12 h-16 object-cover rounded bg-gray-100" onerror="this.src='https://via.placeholder.com/48x64?text=Curso'">
+                        <div class="flex-1 truncate">
+                            <p class="font-bold text-gray-900 text-sm truncate">${c.title}</p>
+                            <p class="text-xs text-purple-600 mt-0.5 font-bold uppercase tracking-wider">${badge}</p>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <button class="p-3 bg-purple-50 text-purple-900 rounded-lg hover:bg-purple-100 transition-colors cursor-pointer"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>`;
             }).join('') || '<p class="col-span-full text-center text-gray-400 py-6">Nenhum curso.</p>';
             lucide.createIcons();
         };
@@ -1500,21 +1508,4 @@
         
         window.editPost = (id) => { 
             window.currentEditorId = 'post-fulltext'; const p = window.blogPosts.find(x => x.id === id); 
-            const dbCats = window.siteCategories.map(c => c.name); const postCats = window.blogPosts.map(post => post.category).filter(c => c && c.trim() !== ''); const allCats = [...new Set([...dbCats, ...postCats])].sort();
-            const catSelect = document.getElementById('post-category'); catSelect.innerHTML = '<option value="">Sem Categoria</option>' + allCats.map(c => `<option value="${c}">${c}</option>`).join('');
-            document.getElementById('edit-post-id').value = p.id; document.getElementById('post-title').value = p.title; document.getElementById('post-subtitle').value = p.subtitle; 
-            catSelect.value = p.category || ''; document.getElementById('post-image').value = p.imageUrl || ''; document.getElementById('post-youtube').value = p.youtubeUrl || ''; document.getElementById('post-fulltext').innerHTML = p.fullText; 
-            document.getElementById('editor-modal').classList.remove('hidden'); document.getElementById('btn-delete-editor').classList.remove('hidden'); 
-        };
-        window.closeEditor = () => document.getElementById('editor-modal').classList.add('hidden');
-
-        window.execEditor = (cmd, val = null) => { document.execCommand(cmd, false, val); const el = document.getElementById(window.currentEditorId || 'post-fulltext'); if(el) el.focus(); };
-        window.insertEditorLink = () => { const url = prompt("URL:"); if(url) window.execEditor('createLink', url); };
-        window.insertEditorImage = () => { const url = prompt("Link da imagem:"); if (url) window.execEditor('insertHTML', `<img src="${window.getDriveImageUrl(url)}" class="w-full rounded-xl my-4 shadow-sm" />`); };
-        window.insertEditorVideo = () => { const url = prompt("Link do YouTube:"); const id = window.getYoutubeId(url); if (id) window.execEditor('insertHTML', `<div class="aspect-video w-full rounded-xl overflow-hidden my-4 shadow-sm"><iframe class="w-full h-full" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen></iframe></div>`); };
-        window.insertEditorButton = () => { const text = prompt("Texto do botão:"); if (!text) return; const url = prompt("Link de destino:"); if (!url) return; const safeUrl = url.startsWith('http') ? url : 'https://' + url; window.execEditor('insertHTML', `<div class="my-8 flex justify-center"><a href="${safeUrl}" target="_blank" class="sys-bg-accent font-black text-sm sm:text-base py-4 px-10 rounded-full shadow-2xl transition-all hover:scale-105 uppercase tracking-wide" style="color: #ffffff !important; text-decoration: none !important;">${text}</a></div><p><br></p>`); };
-
-        lucide.createIcons();
-    </script>
-</body>
-</html>
+            const dbCats = window.siteCategories.map(c => c.name); const postCats = window.blogPosts
