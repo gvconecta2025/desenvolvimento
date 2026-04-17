@@ -140,7 +140,7 @@
                 </button>
                 <a href="#" onclick="window.clearFilter(); window.showHome(); return false;" class="text-xl sm:text-2xl font-black tracking-tight sys-text-accent flex items-center gap-3 truncate hover:opacity-80 transition-opacity">
                     <img src="./foto-compartilhamento.png" alt="Logo" class="w-9 h-9 rounded-full object-cover border-2 sys-border shrink-0 shadow-sm">
-                    PLH
+                    Professor Luiz Henrique
                 </a>
             </div>
             
@@ -214,8 +214,8 @@
     <!-- Main Content: Home (Posts) -->
     <main id="home-view" class="flex-grow max-w-3xl w-full mx-auto px-4 py-8 pb-28 sm:pb-8 z-10 fade-enter">
         <div class="mb-8 border-b sys-border pb-6" id="feed-header">
-            <h2 class="text-3xl font-black sys-text-primary mb-1">Desenvolvimento Sistemático</h2>
-            <p class="sys-text-secondary font-medium">Método, Rotina e Alta Performance para Jovens e Famílias.</p>
+            <h2 class="text-3xl font-black sys-text-primary mb-1">Desenvolvimento e Capacitação.</h2>
+            <p class="sys-text-secondary font-medium">De Adolescentes e jovens - 9 a 17 anos.</p>
         </div>
         <div id="feed-container" class="flex flex-col gap-6"></div>
     </main>
@@ -868,7 +868,7 @@
             if (navigator.share) { try { await navigator.share({ title: "App PLH", text }); } catch(e) { window.copyToClipboardText(text); } } else { window.copyToClipboardText(text); }
         };
         window.shareCommunityLink = async () => {
-            const url = "https://chat.whatsapp.com/DgwfvBpeVZIIzHZLgiIlCk";
+            const url = "https://chat.whatsapp.com/Gz85l2zmg3p20XsOqgzB0h";
             const text = `🟢 Faça parte da Comunidade de Desenvolvimento Sistemático no WhatsApp!\nUm ambiente para pais e famílias focados em desenvolver a autonomia e o método de estudo dos filhos.\nEntre por aqui: ${url}`;
             if (navigator.share) { try { await navigator.share({ title: "Comunidade PLH", text }); } catch(e) { window.copyToClipboardText(text); } } else { window.copyToClipboardText(text); }
         };
@@ -880,7 +880,7 @@
         window.renderPostsFeed = () => {
             const header = document.getElementById('feed-header'); const container = document.getElementById('feed-container'); 
             if (window.currentCategoryFilter) header.innerHTML = `<div class="flex items-center gap-3"><button onclick="window.clearFilter()" class="p-2 sys-bg-surface sys-border border rounded-full hover:opacity-80"><i data-lucide="arrow-left" class="w-4 h-4 sys-text-secondary"></i></button><h2 class="text-3xl font-black sys-text-primary">Pasta: ${window.currentCategoryFilter}</h2></div>`;
-            else header.innerHTML = `<h2 class="text-3xl font-black sys-text-primary mb-1">Desenvolvimento Sistemático</h2><p class="sys-text-secondary font-medium">Conteúdos e artigos sobre Método, Rotina e Alta Performance.</p>`;
+            else header.innerHTML = `<h2 class="text-3xl font-black sys-text-primary mb-1">Desenvolvimento e Capacitação.</h2><p class="sys-text-secondary font-medium">De Adolescentes e jovens - 9 a 17 anos.</p>`;
             container.innerHTML = '';
             let posts = window.blogPosts.filter(p => p.status !== 'draft');
             if (window.currentCategoryFilter) posts = posts.filter(p => (p.category || '').trim().toLowerCase() === window.currentCategoryFilter.trim().toLowerCase());
