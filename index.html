@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,64 +7,85 @@
     <link rel="preconnect" href="https://www.gstatic.com">
     <link rel="preconnect" href="https://firestore.googleapis.com">
     
-    <title>PLH - Desenvolvimento Sistemático</title>
+    <title id="page-title">A Minha Plataforma</title>
     
     <!-- Metadados para Redes Sociais (Open Graph / WhatsApp) -->
-    <meta property="og:title" content="PLH - Desenvolvimento Sistemático">
-    <meta property="og:description" content="Método, Rotina e Alta Performance para Jovens">
-    <meta property="og:url" content="https://professorluizhenrique.vercel.app/">
-    <meta property="og:image" content="https://professorluizhenrique.vercel.app/foto-compartilhamento.png">
-    <meta property="og:image:type" content="image/png">
+    <meta property="og:title" content="Plataforma de Estudos">
+    <meta property="og:description" content="Aceda aos nossos conteúdos e comunidade.">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     
-    <!-- Ícone da Aba do Navegador -->
-    <link rel="icon" type="image/png" href="./foto-compartilhamento.png">
+    <!-- Ícone do Separador do Navegador (Dinâmico) -->
+    <link id="favicon" rel="icon" type="image/png" href="./foto-compartilhamento.png">
     
-    <!-- Cor da barra de status no mobile -->
-    <meta name="theme-color" content="#1e3a8a">
+    <!-- Cor da barra de estado no mobile -->
+    <meta name="theme-color" content="#1e3a8a" id="meta-theme-color">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="./foto-compartilhamento.png">
+    <link id="apple-touch-icon" rel="apple-touch-icon" href="./foto-compartilhamento.png">
 
     <!-- Memória do Sistema e Motor PWA -->
     <script>
         let savedTheme = localStorage.getItem('site-theme');
-        const themeMigrated = localStorage.getItem('theme-migrated-v2');
-
-        // Força o tema 'light' APENAS na primeira vez para limpar cache antigo.
-        // Depois disso, respeita qualquer tema que o usuário escolher (inclusive o Pólen).
-        if (!themeMigrated) {
+        const userThemePref = localStorage.getItem('user-theme-preference');
+        
+        // Se o utilizador não escolheu um tema, carregamos o light temporariamente até o Firebase carregar o Padrão
+        if (!savedTheme) {
             savedTheme = 'light';
-            localStorage.setItem('site-theme', 'light');
-            localStorage.setItem('theme-migrated-v2', 'true');
-        } else {
-            // Se já migrou, usa o tema salvo ou cai para o 'light' se não houver nenhum
-            savedTheme = savedTheme || 'light';
         }
         
         const savedFontSize = localStorage.getItem('site-font-size') || 'normal';
         document.documentElement.classList.add('theme-' + savedTheme);
+        document.documentElement.classList.add('font-size-' + savedFontSize);
 
-        window.addEventListener('load', () => {
+        // O Manifest e Ícones agora são gerados dinamicamente via Firebase
+        window.updateAppManifest = (config) => {
+            const appName = config?.appName || "A Minha Plataforma";
+            const shortName = config?.appName ? config.appName.substring(0, 12) : "Plataforma";
+            const themeColor = config?.defaultTheme === 'dark' ? '#1f2937' : '#1e3a8a';
+            const bgColor = config?.defaultTheme === 'dark' ? '#111827' : '#f3f4f6';
+            
+            // Resolve o Ícone
+            let iconUrl = "./foto-compartilhamento.png";
+            if (config?.appLogo) {
+                const match = config.appLogo.match(/\/d\/([a-zA-Z0-9_-]+)/) || config.appLogo.match(/id=([a-zA-Z0-9_-]+)/);
+                iconUrl = match ? `https://lh3.googleusercontent.com/d/${match[1]}` : config.appLogo;
+            }
+            
+            // Atualiza Favicon e Apple Icon em tempo real
+            const favicon = document.getElementById('favicon');
+            if (favicon) favicon.href = iconUrl;
+            const appleIcon = document.getElementById('apple-touch-icon');
+            if (appleIcon) appleIcon.href = iconUrl;
+
+            // Constrói e injeta o Manifest PWA
             const manifest = {
-                name: "PLH - Desenvolvimento Sistemático",
-                short_name: "PLH Método",
+                name: appName,
+                short_name: shortName,
                 start_url: window.location.pathname,
                 display: "standalone",
-                background_color: "#f3f4f6",
-                theme_color: "#1e3a8a",
+                background_color: bgColor,
+                theme_color: themeColor,
                 icons: [
-                    { src: "./foto-compartilhamento.png", sizes: "192x192", type: "image/png" },
-                    { src: "./foto-compartilhamento.png", sizes: "512x512", type: "image/png" }
+                    { src: iconUrl, sizes: "192x192", type: "image/png" },
+                    { src: iconUrl, sizes: "512x512", type: "image/png" }
                 ]
             };
             const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/manifest+json'});
-            const link = document.createElement('link');
-            link.rel = 'manifest';
+            let link = document.getElementById('app-manifest-link');
+            if (!link) {
+                link = document.createElement('link');
+                link.id = 'app-manifest-link';
+                link.rel = 'manifest';
+                document.head.appendChild(link);
+            }
             link.href = URL.createObjectURL(manifestBlob);
-            document.head.appendChild(link);
 
+            document.getElementById('meta-theme-color').content = themeColor;
+            document.getElementById('page-title').innerText = appName;
+        };
+
+        window.addEventListener('load', () => {
             if ('serviceWorker' in navigator) {
                 const swCode = `
                     self.addEventListener('install', (e) => self.skipWaiting());
@@ -74,6 +95,8 @@
                 const swBlob = new Blob([swCode], {type: 'application/javascript'});
                 navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
             }
+            // Fallback manifest inicial antes do carregamento do Firebase
+            window.updateAppManifest(null);
         });
 
         let deferredPrompt;
@@ -151,8 +174,8 @@
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
                 <a href="#" onclick="window.clearFilter(); window.showHome(); return false;" class="text-xl sm:text-2xl font-black tracking-tight sys-text-accent flex items-center gap-3 truncate hover:opacity-80 transition-opacity">
-                    <img src="./foto-compartilhamento.png" alt="Logo" class="w-9 h-9 rounded-full object-cover border-2 sys-border shrink-0 shadow-sm">
-                    Professor Luiz Henrique
+                    <img id="header-app-logo" src="./foto-compartilhamento.png" onerror="this.src='https://via.placeholder.com/64?text=Logo'" alt="Logo" class="w-9 h-9 rounded-full object-cover border-2 sys-border shrink-0 shadow-sm">
+                    <span id="header-app-name" class="truncate">A Minha App</span>
                 </a>
             </div>
             
@@ -169,11 +192,13 @@
                     </button>
                     <div id="theme-menu" class="hidden absolute right-0 mt-2 w-48 sys-bg-surface sys-border border rounded-xl shadow-2xl py-2 z-50">
                         <p class="px-4 py-2 text-xs font-bold uppercase tracking-wider sys-text-secondary border-b sys-border mb-2">Temas</p>
-                        <button onclick="window.setSiteTheme('light')" class="w-full text-left px-4 py-2 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Claro</button>
-                        <button onclick="window.setSiteTheme('dark')" class="w-full text-left px-4 py-2 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Escuro</button>
-                        <button onclick="window.setSiteTheme('polen')" class="w-full text-left px-4 py-2 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Pólen</button>
-                        <button onclick="window.setSiteTheme('cafe')" class="w-full text-left px-4 py-2 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Café</button>
-                        <button onclick="window.setSiteTheme('verde')" class="w-full text-left px-4 py-2 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Verde</button>
+                        <button onclick="window.setSiteTheme('light', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Claro</button>
+                        <button onclick="window.setSiteTheme('dark', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Escuro</button>
+                        <button onclick="window.setSiteTheme('polen', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Pólen</button>
+                        <button onclick="window.setSiteTheme('cafe', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Café</button>
+                        <button onclick="window.setSiteTheme('verde', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Verde</button>
+                        <button onclick="window.setSiteTheme('azul', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Azul</button>
+                        <button onclick="window.setSiteTheme('vermelho', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Vermelho</button>
                     </div>
                 </div>
             </div>
@@ -181,7 +206,7 @@
     </header>
 
     <!-- Sidebar Overlay -->
-    <div id="sidebar-overlay" onclick="window.toggleMobileMenu()" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden transition-opacity opacity-0 duration-300 lg:hidden"></div>
+    <div id="sidebar-overlay" onclick="window.toggleMobileMenu()" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden transition-opacity opacity-0 duration-300 lg:hidden cursor-pointer"></div>
 
     <!-- Sidebar Menu -->
     <aside id="sidebar-menu" class="fixed top-0 left-0 h-full w-[280px] sys-bg-surface shadow-2xl lg:shadow-[4px_0_24px_rgba(0,0,0,0.04)] z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col border-r sys-border">
@@ -196,30 +221,30 @@
             
             <div class="flex flex-col gap-2 mt-2">
                 <p class="text-[10px] font-black uppercase tracking-widest sys-text-secondary mb-2 pl-1">Explorar</p>
-                <button onclick="window.toggleCategories(event)" class="flex items-center justify-between w-full text-left sys-text-primary hover:sys-text-accent font-bold text-lg transition-colors">
+                <button onclick="window.toggleCategories(event)" class="flex items-center justify-between w-full text-left sys-text-primary hover:sys-text-accent font-bold text-lg transition-colors py-1">
                     <span class="flex items-center gap-4"><i data-lucide="folder" class="w-5 h-5"></i> Pastas</span>
                     <i data-lucide="chevron-down" id="cat-chevron" class="w-4 h-4 transition-transform duration-300"></i>
                 </button>
                 <div id="categories-list" class="hidden flex-col pl-10 mt-1 gap-3 sys-text-secondary border-l-2 sys-border ml-2"></div>
             </div>
             
-            <a href="#" onclick="window.showBio(); window.toggleMobileMenu(); return false;" class="flex items-center gap-4 font-bold text-lg sys-text-primary hover:sys-text-accent transition-colors mt-2"><i data-lucide="user" class="w-5 h-5"></i> O Professor</a>
+            <a href="#" onclick="window.showBio(); window.toggleMobileMenu(); return false;" class="flex items-center gap-4 font-bold text-lg sys-text-primary hover:sys-text-accent transition-colors mt-2"><i data-lucide="user" class="w-5 h-5"></i> O Autor</a>
             <a href="#" onclick="window.showCommunity(); window.toggleMobileMenu(); return false;" class="flex items-center gap-4 font-bold text-lg text-green-600 hover:text-green-700 transition-colors mt-2"><i data-lucide="users" class="w-5 h-5"></i> Comunidade</a>
             
             <!-- Botoes de Partilha -->
             <div class="mt-4 pt-4 border-t sys-border flex flex-col gap-3">
-                <p class="text-[10px] font-black uppercase tracking-widest sys-text-secondary pl-1">Compartilhar</p>
-                <button onclick="window.shareApp()" class="flex items-center gap-4 font-bold text-sm sys-text-primary hover:sys-text-accent transition-colors">
-                    <div class="p-2 sys-bg-body rounded-lg sys-border border"><i data-lucide="share-2" class="w-4 h-4"></i></div> Indicar o App
+                <p class="text-[10px] font-black uppercase tracking-widest sys-text-secondary pl-1">Partilhar</p>
+                <button onclick="window.shareApp()" class="flex items-center gap-4 font-bold text-sm sys-text-primary hover:sys-text-accent transition-colors py-1">
+                    <div class="p-2 sys-bg-body rounded-lg sys-border border"><i data-lucide="share-2" class="w-4 h-4"></i></div> Indicar a App
                 </button>
-                <button onclick="window.shareCommunityLink()" class="flex items-center gap-4 font-bold text-sm sys-text-primary hover:text-green-600 transition-colors">
+                <button onclick="window.shareCommunityLink()" class="flex items-center gap-4 font-bold text-sm sys-text-primary hover:text-green-600 transition-colors py-1">
                     <div class="p-2 sys-bg-body rounded-lg sys-border border"><i data-lucide="message-circle" class="w-4 h-4 text-green-600"></i></div> Indicar Comunidade
                 </button>
             </div>
 
             <!-- Rodapé Invisível Admin -->
             <div class="mt-auto pt-6 border-t sys-border pb-safe flex justify-end px-2">
-                <button onclick="window.openAdminLogin()" class="p-3 sys-text-secondary opacity-10 hover:opacity-100 transition-all"><i data-lucide="settings" class="w-5 h-5"></i></button>
+                <button onclick="window.openAdminLogin()" class="p-3 sys-text-secondary opacity-10 hover:opacity-100 transition-all cursor-pointer"><i data-lucide="settings" class="w-6 h-6"></i></button>
             </div>
         </div>
     </aside>
@@ -236,7 +261,7 @@
     <main id="library-view" class="hidden flex-grow max-w-4xl w-full mx-auto px-4 py-8 pb-28 sm:pb-8 z-10 fade-enter">
         <div class="mb-8 border-b sys-border pb-6 text-center sm:text-left">
             <h2 class="text-3xl font-black sys-text-primary mb-2 flex items-center justify-center sm:justify-start gap-3"><i data-lucide="book-open" class="w-8 h-8 sys-text-accent"></i> <span id="lib-title">Biblioteca</span></h2>
-            <p id="lib-sub" class="sys-text-secondary font-medium">Livros, e-books e materiais para o desenvolvimento da autonomia e rotina de estudos.</p>
+            <p id="lib-sub" class="sys-text-secondary font-medium">Material para estudo e aprofundamento.</p>
         </div>
         <div id="library-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6"></div>
     </main>
@@ -244,8 +269,8 @@
     <!-- Main Content: Book Detail -->
     <main id="book-detail-view" class="hidden flex-grow max-w-4xl w-full mx-auto px-4 py-8 pb-28 sm:pb-8 z-10 fade-enter">
         <div class="mb-6 border-b sys-border pb-4">
-            <button onclick="window.showLibrary()" class="flex items-center gap-2 sys-text-accent font-bold group hover:opacity-80 transition-all">
-                <i data-lucide="arrow-left" class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform"></i> Voltar para Biblioteca
+            <button onclick="window.showLibrary()" class="flex items-center gap-2 sys-text-accent font-bold group hover:opacity-80 transition-all py-2 cursor-pointer">
+                <i data-lucide="arrow-left" class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform"></i> Voltar para a Biblioteca
             </button>
         </div>
         <div id="book-detail-content"></div>
@@ -255,7 +280,7 @@
     <main id="courses-view" class="hidden flex-grow max-w-4xl w-full mx-auto px-4 py-8 pb-28 sm:pb-8 z-10 fade-enter">
         <div class="mb-8 border-b sys-border pb-6 text-center sm:text-left">
             <h2 class="text-3xl font-black sys-text-primary mb-2 flex items-center justify-center sm:justify-start gap-3"><i data-lucide="graduation-cap" class="w-8 h-8 sys-text-accent"></i> <span id="crs-title">Cursos e Eventos</span></h2>
-            <p id="crs-sub" class="sys-text-secondary font-medium">Cursos online, mentorias e eventos focados em alta performance.</p>
+            <p id="crs-sub" class="sys-text-secondary font-medium">Cursos online, mentorias e eventos presenciais.</p>
         </div>
         <div id="courses-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6"></div>
     </main>
@@ -263,8 +288,8 @@
     <!-- Main Content: Course Detail -->
     <main id="course-detail-view" class="hidden flex-grow max-w-4xl w-full mx-auto px-4 py-8 pb-28 sm:pb-8 z-10 fade-enter">
         <div class="mb-6 border-b sys-border pb-4">
-            <button onclick="window.showCourses()" class="flex items-center gap-2 sys-text-accent font-bold group hover:opacity-80 transition-all">
-                <i data-lucide="arrow-left" class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform"></i> Voltar para Cursos
+            <button onclick="window.showCourses()" class="flex items-center gap-2 sys-text-accent font-bold group hover:opacity-80 transition-all py-2 cursor-pointer">
+                <i data-lucide="arrow-left" class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform"></i> Voltar para os Cursos
             </button>
         </div>
         <div id="course-detail-content"></div>
@@ -274,7 +299,7 @@
     <main id="article-view" class="hidden flex-grow w-full z-10 transition-all duration-300 pb-28 sm:pb-8">
         <div class="max-w-3xl mx-auto px-4 py-8 fade-enter">
             <div class="mb-8 sys-border border-b pb-6">
-                <button onclick="window.showHome()" class="flex items-center gap-2 sys-text-accent font-bold group hover:opacity-80 transition-all">
+                <button onclick="window.showHome()" class="flex items-center gap-2 sys-text-accent font-bold group hover:opacity-80 transition-all py-2 cursor-pointer">
                     <i data-lucide="arrow-left" class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform"></i> Voltar
                 </button>
             </div>
@@ -288,8 +313,8 @@
             <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border-4 border-white ring-1 ring-green-200">
                 <i data-lucide="users" class="w-10 h-10"></i>
             </div>
-            <h2 class="text-3xl sm:text-4xl font-black sys-text-primary mb-3">Comunidade PLH Famílias</h2>
-            <p class="text-lg sys-text-secondary max-w-xl mx-auto">Um espaço seguro e focado para o desenvolvimento do seu filho.</p>
+            <h2 id="community-page-title" class="text-3xl sm:text-4xl font-black sys-text-primary mb-3">A Nossa Comunidade</h2>
+            <p id="community-page-subtitle" class="text-lg sys-text-secondary max-w-xl mx-auto">Um espaço focado no desenvolvimento em rede.</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -298,7 +323,7 @@
                     <i data-lucide="check-circle-2" class="w-6 h-6"></i>
                     <h3 class="font-bold text-lg sys-text-primary">O que é?</h3>
                 </div>
-                <p class="text-sm sys-text-secondary leading-relaxed">Um ambiente para pais e famílias focados em desenvolver a autonomia, rotina e o método de estudo dos seus filhos. Nosso objetivo é fornecer material sólido e reflexões honestas focadas na alta performance académica.</p>
+                <p class="text-sm sys-text-secondary leading-relaxed">Um ambiente de apoio contínuo focado no crescimento prático e networking saudável. O nosso objetivo é fornecer material sólido e avisos relevantes da nossa comunidade.</p>
             </div>
             
             <div class="flex flex-col gap-4">
@@ -307,31 +332,15 @@
                         <i data-lucide="x-circle" class="w-6 h-6"></i>
                         <h3 class="font-bold text-lg sys-text-primary">O que não é?</h3>
                     </div>
-                    <p class="text-sm sys-text-secondary leading-relaxed">Não somos uma escola tradicional ou um cursinho de reforço genérico. Não oferecemos fórmulas mágicas, mas sim um método sólido de Desenvolvimento Sistemático.</p>
+                    <p class="text-sm sys-text-secondary leading-relaxed">Não é um espaço para discussões aleatórias ou spam. Todo o nosso foco está no desenvolvimento dos participantes.</p>
                 </div>
                 <div class="sys-bg-surface p-6 rounded-2xl border sys-border shadow-sm bg-gradient-to-br from-yellow-50 to-transparent">
                     <div class="flex items-center gap-3 mb-2 text-yellow-600">
                         <i data-lucide="shield-check" class="w-6 h-6"></i>
                         <h3 class="font-bold text-lg sys-text-primary">A Regra de Ouro</h3>
                     </div>
-                    <p class="text-sm sys-text-secondary leading-relaxed"><strong>Grupo silencioso.</strong> Sem spam, sem correntes. Apenas avisos diretos de novos artigos, e-books e atualizações do nosso App no WhatsApp.</p>
+                    <p class="text-sm sys-text-secondary leading-relaxed"><strong>Grupo silencioso.</strong> Sem spam, sem correntes. Apenas avisos diretos de novos artigos, materiais e atualizações do nosso projeto.</p>
                 </div>
-            </div>
-        </div>
-
-        <div class="sys-bg-surface p-6 sm:p-8 rounded-2xl border sys-border shadow-sm bg-gradient-to-br from-blue-50 to-transparent mb-10">
-            <div class="flex items-center gap-3 mb-4 text-blue-800">
-                <i data-lucide="target" class="w-6 h-6"></i>
-                <h3 class="font-bold text-xl sys-text-primary">Nossa Missão</h3>
-            </div>
-            <p class="text-base sys-text-primary leading-relaxed mb-6">
-                Auxiliar as famílias na jornada educacional, preparando jovens não apenas para passar de ano, mas para a vida adulta, através do Desenvolvimento Sistemático. Esta é uma <strong>comunidade de estudos</strong> e crescimento contínuo, focada na resolução dos problemas de foco e disciplina.
-            </p>
-            
-            <div class="flex justify-center sm:justify-start gap-3">
-                <button onclick="window.showBio(); window.scrollTo(0,0);" class="flex items-center gap-2 sys-bg-surface sys-text-primary border-2 sys-border py-3 px-6 rounded-xl font-bold text-sm uppercase tracking-wide hover:bg-gray-50 transition-all shadow-sm">
-                    <i data-lucide="user" class="w-4 h-4"></i> Conheça o Professor
-                </button>
             </div>
         </div>
 
@@ -344,133 +353,127 @@
     <!-- VIEW: BIOGRAFIA DO PROFESSOR (Editável no Painel) -->
     <main id="bio-view" class="hidden flex-grow max-w-3xl w-full mx-auto px-4 py-8 pb-28 sm:pb-8 z-10 fade-enter">
         <div class="mb-8 border-b sys-border pb-6">
-            <button onclick="window.showCommunity()" class="flex items-center gap-2 sys-text-accent font-bold group hover:opacity-80 transition-all">
+            <button onclick="window.showHome()" class="flex items-center gap-2 sys-text-accent font-bold group hover:opacity-80 transition-all py-2 cursor-pointer">
                 <i data-lucide="arrow-left" class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform"></i> Voltar
             </button>
         </div>
         
-        <div class="flex flex-col items-center text-center mb-10">
-            <img src="./foto-compartilhamento.png" alt="Professor Luiz Henrique Magalhães" class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl ring-2 ring-gray-100 mb-6">
-            <h1 class="text-3xl sm:text-4xl font-black sys-text-primary leading-tight mb-2">Luiz Henrique Magalhães</h1>
-            <p class="text-lg sys-text-secondary font-bold uppercase tracking-widest">Professor, Mentor e Autor</p>
-        </div>
-
         <!-- Biografia renderizada do Firebase -->
         <div id="bio-content-area" class="prose max-w-none sys-text-primary text-base sm:text-lg leading-relaxed space-y-6 pb-10">
             <!-- Loading fallback -->
-            <p class="text-center opacity-50">Carregando informações...</p>
+            <p class="text-center opacity-50">A carregar informações...</p>
         </div>
     </main>
 
     <!-- Bottom Nav -->
     <nav class="fixed bottom-0 w-full sys-bg-surface sys-border border-t shadow-[0_-10px_40px_rgba(0,0,0,0.06)] z-30 sm:hidden pb-safe">
         <div class="flex justify-around items-center h-[72px] px-1">
-            <button onclick="window.clearFilter(); window.showHome(); window.scrollTo(0,0);" class="flex flex-col items-center justify-center w-full h-full sys-text-secondary hover:sys-text-accent transition-all group">
-                <div class="p-1.5 rounded-2xl group-hover:bg-gray-100/50 transition-colors mb-0.5"><i data-lucide="home" class="w-[20px] h-[20px]"></i></div>
-                <span class="text-[10px] font-bold">Início</span>
+            <button onclick="window.clearFilter(); window.showHome(); window.scrollTo(0,0);" class="flex flex-col items-center justify-center w-full h-full sys-text-secondary hover:sys-text-accent transition-all group focus:outline-none cursor-pointer">
+                <div class="p-1.5 rounded-2xl group-hover:bg-gray-100/50 transition-colors"><i data-lucide="home" class="w-[20px] h-[20px]"></i></div>
+                <span class="text-[10px] font-bold mt-1">Início</span>
             </button>
-            <button onclick="window.showCourses(); window.scrollTo(0,0);" class="flex flex-col items-center justify-center w-full h-full sys-text-secondary hover:sys-text-accent transition-all group">
-                <div class="p-1.5 rounded-2xl group-hover:bg-gray-100/50 transition-colors mb-0.5"><i data-lucide="graduation-cap" class="w-[20px] h-[20px]"></i></div>
-                <span class="text-[10px] font-bold">Cursos</span>
+            <button onclick="window.showCourses(); window.scrollTo(0,0);" class="flex flex-col items-center justify-center w-full h-full sys-text-secondary hover:sys-text-accent transition-all group focus:outline-none cursor-pointer">
+                <div class="p-1.5 rounded-2xl group-hover:bg-gray-100/50 transition-colors"><i data-lucide="graduation-cap" class="w-[20px] h-[20px]"></i></div>
+                <span class="text-[10px] font-bold mt-1">Cursos</span>
             </button>
-            <button onclick="window.showLibrary(); window.scrollTo(0,0);" class="flex flex-col items-center justify-center w-full h-full sys-text-secondary hover:sys-text-accent transition-all group">
-                <div class="p-1.5 rounded-2xl group-hover:bg-gray-100/50 transition-colors mb-0.5"><i data-lucide="book-open" class="w-[20px] h-[20px]"></i></div>
-                <span class="text-[10px] font-bold">Biblioteca</span>
+            <button onclick="window.showLibrary(); window.scrollTo(0,0);" class="flex flex-col items-center justify-center w-full h-full sys-text-secondary hover:sys-text-accent transition-all group focus:outline-none cursor-pointer">
+                <div class="p-1.5 rounded-2xl group-hover:bg-gray-100/50 transition-colors"><i data-lucide="book-open" class="w-[20px] h-[20px]"></i></div>
+                <span class="text-[10px] font-bold mt-1">Biblioteca</span>
             </button>
-            <button onclick="window.toggleCategoriesModal()" class="flex flex-col items-center justify-center w-full h-full sys-text-secondary hover:sys-text-accent transition-all group">
-                <div class="p-1.5 rounded-2xl group-hover:bg-gray-100/50 transition-colors mb-0.5"><i data-lucide="layout-grid" class="w-[20px] h-[20px]"></i></div>
-                <span class="text-[10px] font-bold">Pastas</span>
+            <button onclick="window.toggleCategoriesModal()" class="flex flex-col items-center justify-center w-full h-full sys-text-secondary hover:sys-text-accent transition-all group focus:outline-none cursor-pointer">
+                <div class="p-1.5 rounded-2xl group-hover:bg-gray-100/50 transition-colors"><i data-lucide="layout-grid" class="w-[20px] h-[20px]"></i></div>
+                <span class="text-[10px] font-bold mt-1">Pastas</span>
             </button>
-            <button onclick="window.showCommunity(); window.scrollTo(0,0);" class="flex flex-col items-center justify-center w-full h-full text-green-600 hover:text-green-700 transition-all group">
-                <div class="p-2 rounded-2xl bg-green-600 text-white shadow-md mb-0.5"><i data-lucide="users" class="w-[18px] h-[18px]"></i></div>
-                <span class="text-[10px] font-black text-green-700">Grupo</span>
+            <button onclick="window.showCommunity(); window.scrollTo(0,0);" class="flex flex-col items-center justify-center w-full h-full text-green-600 hover:text-green-700 transition-all group focus:outline-none cursor-pointer">
+                <div class="p-2 rounded-2xl bg-green-600 text-white shadow-md"><i data-lucide="users" class="w-[18px] h-[18px]"></i></div>
+                <span class="text-[10px] font-black text-green-700 mt-1">Grupo</span>
             </button>
         </div>
     </nav>
 
     <!-- Categories Modal (Bottom) -->
-    <div id="categories-modal" onclick="if(event.target === this) window.toggleCategoriesModal()" class="hidden fixed inset-0 z-50 flex items-end justify-center modal-overlay sm:hidden">
-        <div class="sys-bg-surface rounded-t-3xl shadow-2xl w-full p-6 relative transform transition-transform translate-y-full slide-up-animation pb-safe border-t sys-border">
+    <div id="categories-modal" onclick="if(event.target === this) window.toggleCategoriesModal()" class="hidden fixed inset-0 z-[60] flex items-end justify-center modal-overlay sm:hidden">
+        <div class="sys-bg-surface rounded-t-3xl shadow-2xl w-full p-6 relative transform transition-transform translate-y-full slide-up-animation pb-safe border-t sys-border z-[61]">
             <div class="flex justify-between items-center mb-6 border-b sys-border pb-4">
                 <h3 class="text-xl font-black sys-text-primary flex items-center gap-2"><i data-lucide="layout-grid" class="w-6 h-6 sys-text-accent"></i> Pastas</h3>
-                <button onclick="window.toggleCategoriesModal()" class="sys-text-secondary bg-gray-100 p-2 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="window.toggleCategoriesModal()" class="sys-text-secondary bg-gray-100 p-2 rounded-full cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div id="bottom-categories-list" class="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pb-4"></div>
         </div>
     </div>
 
     <!-- Floating Button (Desktop) -->
-    <button onclick="window.showCommunity(); window.scrollTo(0,0);" class="hidden sm:flex floating-btn bg-green-600 text-white px-5 py-3 rounded-full shadow-2xl items-center gap-2 font-bold text-sm border-b-4 border-green-800 active:translate-y-1 active:border-b-0 hover:bg-green-700 transition-all">
-        <i data-lucide="users" class="w-5 h-5"></i> Comunidade PLH
+    <button onclick="window.showCommunity(); window.scrollTo(0,0);" class="hidden sm:flex floating-btn bg-green-600 text-white px-5 py-3 rounded-full shadow-2xl items-center gap-2 font-bold text-sm border-b-4 border-green-800 active:translate-y-1 active:border-b-0 hover:bg-green-700 transition-all cursor-pointer z-40">
+        <i data-lucide="users" class="w-5 h-5"></i> Comunidade Online
     </button>
 
     <!-- Admin Login Modal -->
-    <div id="login-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center modal-overlay px-4">
+    <div id="login-modal" class="hidden fixed inset-0 z-[80] flex items-center justify-center modal-overlay px-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 relative">
-            <button onclick="window.closeAdminLogin()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <button onclick="window.closeAdminLogin()" class="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 cursor-pointer"><i data-lucide="x" class="w-6 h-6"></i></button>
             <div class="text-center mb-6"><div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4"><i data-lucide="lock" class="w-8 h-8"></i></div><h3 class="text-2xl font-bold text-gray-900">Acesso Restrito</h3></div>
-            <input type="password" id="admin-password" placeholder="Senha" class="w-full border border-gray-300 rounded-xl px-4 py-3 mb-4 outline-none focus:ring-2 focus:ring-blue-900 text-gray-900 bg-white">
-            <button onclick="window.verifyPassword()" class="w-full bg-blue-900 text-white font-bold py-3 rounded-xl transition-all hover:bg-blue-950">Entrar no Sistema</button>
-            <p id="login-error" class="text-red-500 text-sm mt-3 text-center hidden">Senha incorreta.</p>
+            <input type="password" id="admin-password" placeholder="Palavra-passe" class="w-full border border-gray-300 rounded-xl px-4 py-3 mb-4 outline-none focus:ring-2 focus:ring-blue-900 text-gray-900 bg-white">
+            <button onclick="window.verifyPassword()" class="w-full bg-blue-900 text-white font-bold py-3 rounded-xl transition-all hover:bg-blue-950 cursor-pointer">Entrar no Sistema</button>
+            <p id="login-error" class="text-red-500 text-sm mt-3 text-center hidden">Palavra-passe incorreta.</p>
         </div>
     </div>
 
     <!-- Admin Dashboard -->
-    <div id="dashboard-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center modal-overlay px-4">
+    <div id="dashboard-modal" class="hidden fixed inset-0 z-[80] flex items-center justify-center modal-overlay px-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col relative overflow-hidden">
             <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2"><i data-lucide="layout-dashboard" class="w-6 h-6 text-blue-900"></i> Painel de Controle</h3>
-                <button onclick="window.closeDashboard()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-6 h-6"></i></button>
+                <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2"><i data-lucide="layout-dashboard" class="w-6 h-6 text-blue-900"></i> Painel de Controlo</h3>
+                <button onclick="window.closeDashboard()" class="p-2 text-gray-400 hover:text-gray-600 cursor-pointer"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div class="px-6 pt-4 border-b border-gray-100 bg-white flex gap-6 overflow-x-auto">
-                <button onclick="window.switchAdminTab('posts')" id="tab-btn-posts" class="pb-3 text-sm font-black text-blue-900 border-b-2 border-blue-900 focus:outline-none whitespace-nowrap">Conteúdos</button>
-                <button onclick="window.switchAdminTab('courses')" id="tab-btn-courses" class="pb-3 text-sm font-bold text-gray-400 border-b-2 border-transparent focus:outline-none whitespace-nowrap">Cursos</button>
-                <button onclick="window.switchAdminTab('books')" id="tab-btn-books" class="pb-3 text-sm font-bold text-gray-400 border-b-2 border-transparent focus:outline-none whitespace-nowrap">Biblioteca</button>
-                <button onclick="window.switchAdminTab('categories')" id="tab-btn-categories" class="pb-3 text-sm font-bold text-gray-400 border-b-2 border-transparent focus:outline-none whitespace-nowrap">Pastas</button>
-                <button onclick="window.switchAdminTab('community')" id="tab-btn-community" class="pb-3 text-sm font-bold text-gray-400 border-b-2 border-transparent focus:outline-none whitespace-nowrap">Comunidade</button>
-                <button onclick="window.switchAdminTab('bio')" id="tab-btn-bio" class="pb-3 text-sm font-bold text-gray-400 border-b-2 border-transparent focus:outline-none whitespace-nowrap">Professor</button>
-                <button onclick="window.switchAdminTab('config')" id="tab-btn-config" class="pb-3 text-sm font-bold text-gray-400 border-b-2 border-transparent focus:outline-none whitespace-nowrap">Ajustes</button>
+                <button onclick="window.switchAdminTab('posts')" id="tab-btn-posts" class="pb-3 text-sm font-black text-blue-900 border-b-2 border-blue-900 focus:outline-none whitespace-nowrap cursor-pointer">Conteúdos</button>
+                <button onclick="window.switchAdminTab('courses')" id="tab-btn-courses" class="pb-3 text-sm font-bold text-gray-400 border-b-2 border-transparent focus:outline-none whitespace-nowrap cursor-pointer">Cursos</button>
+                <button onclick="window.switchAdminTab('books')" id="tab-btn-books" class="pb-3 text-sm font-bold text-gray-400 border-b-2 border-transparent focus:outline-none whitespace-nowrap cursor-pointer">Biblioteca</button>
+                <button onclick="window.switchAdminTab('categories')" id="tab-btn-categories" class="pb-3 text-sm font-bold text-gray-400 border-b-2 border-transparent focus:outline-none whitespace-nowrap cursor-pointer">Pastas</button>
+                <button onclick="window.switchAdminTab('community')" id="tab-btn-community" class="pb-3 text-sm font-bold text-gray-400 border-b-2 border-transparent focus:outline-none whitespace-nowrap cursor-pointer">Comunidade</button>
+                <button onclick="window.switchAdminTab('bio')" id="tab-btn-bio" class="pb-3 text-sm font-bold text-gray-400 border-b-2 border-transparent focus:outline-none whitespace-nowrap cursor-pointer">Autor / Perfil</button>
+                <button onclick="window.switchAdminTab('config')" id="tab-btn-config" class="pb-3 text-sm font-bold text-gray-400 border-b-2 border-transparent focus:outline-none whitespace-nowrap cursor-pointer">Ajustes</button>
             </div>
             
             <div class="p-6 flex-1 overflow-y-auto bg-gray-50/30">
                 <div id="admin-view-posts">
-                    <div class="flex justify-between items-center mb-6"><h4 class="text-lg font-semibold text-gray-800">Seus Conteúdos</h4><button onclick="window.openEditor()" class="bg-blue-900 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2"><i data-lucide="plus" class="w-5 h-5"></i> Novo Conteúdo</button></div>
+                    <div class="flex justify-between items-center mb-6"><h4 class="text-lg font-semibold text-gray-800">Os Seus Conteúdos</h4><button onclick="window.openEditor()" class="bg-blue-900 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 cursor-pointer"><i data-lucide="plus" class="w-5 h-5"></i> Novo Conteúdo</button></div>
                     <div id="admin-posts-list" class="flex flex-col gap-3"></div>
                 </div>
                 
                 <div id="admin-view-courses" class="hidden">
-                    <div class="flex justify-between items-center mb-6"><h4 class="text-lg font-semibold text-gray-800">Cursos e Eventos</h4><button onclick="window.openCourseEditor()" class="bg-purple-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2"><i data-lucide="folder-plus" class="w-5 h-5"></i> Novo Curso</button></div>
+                    <div class="flex justify-between items-center mb-6"><h4 class="text-lg font-semibold text-gray-800">Cursos e Eventos</h4><button onclick="window.openCourseEditor()" class="bg-purple-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 cursor-pointer"><i data-lucide="folder-plus" class="w-5 h-5"></i> Novo Curso</button></div>
                     <div id="admin-courses-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
                 </div>
 
                 <div id="admin-view-books" class="hidden">
-                    <div class="flex justify-between items-center mb-6"><h4 class="text-lg font-semibold text-gray-800">Biblioteca</h4><button onclick="window.openBookEditor()" class="bg-green-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2"><i data-lucide="book-plus" class="w-5 h-5"></i> Novo Livro</button></div>
+                    <div class="flex justify-between items-center mb-6"><h4 class="text-lg font-semibold text-gray-800">Biblioteca</h4><button onclick="window.openBookEditor()" class="bg-green-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 cursor-pointer"><i data-lucide="book-plus" class="w-5 h-5"></i> Novo Livro</button></div>
                     <div id="admin-books-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
                 </div>
                 <div id="admin-view-categories" class="hidden">
-                    <div class="flex gap-3 mb-6 bg-gray-50 p-4 rounded-2xl border border-gray-100"><input type="text" id="new-category-input" placeholder="Nome da nova pasta..." class="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 outline-none text-gray-900 bg-white"><button onclick="window.createCategory()" class="bg-gray-800 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Adicionar</button></div>
+                    <div class="flex gap-3 mb-6 bg-gray-50 p-4 rounded-2xl border border-gray-100"><input type="text" id="new-category-input" placeholder="Nome da nova pasta..." class="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 outline-none text-gray-900 bg-white"><button onclick="window.createCategory()" class="bg-gray-800 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 cursor-pointer"><i data-lucide="plus" class="w-4 h-4"></i> Adicionar</button></div>
                     <h4 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4 pl-1">Pastas Ativas</h4>
                     <div id="admin-categories-list" class="flex flex-col gap-2"></div>
                 </div>
                 <div id="admin-view-community" class="hidden">
-                    <div class="flex justify-between items-center mb-6"><h4 class="text-lg font-semibold text-gray-800">Grupos de WhatsApp</h4><button onclick="window.openGroupEditor()" class="bg-green-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2"><i data-lucide="plus" class="w-5 h-5"></i> Novo Grupo</button></div>
+                    <div class="flex justify-between items-center mb-6"><h4 class="text-lg font-semibold text-gray-800">Grupos de WhatsApp</h4><button onclick="window.openGroupEditor()" class="bg-green-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 cursor-pointer"><i data-lucide="plus" class="w-5 h-5"></i> Novo Grupo</button></div>
                     <div id="admin-groups-list" class="flex flex-col gap-3"></div>
                 </div>
                 
                 <div id="admin-view-bio" class="hidden">
                     <div class="flex justify-between items-center mb-6">
-                        <h4 class="text-lg font-semibold text-gray-800">Biografia do Professor</h4>
-                        <button onclick="window.saveBio()" class="bg-blue-900 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-sm hover:bg-blue-950 transition-colors">
-                            <i data-lucide="save" class="w-4 h-4"></i> Salvar Biografia
+                        <h4 class="text-lg font-semibold text-gray-800">Apresentação do Autor</h4>
+                        <button onclick="window.saveBio()" class="bg-blue-900 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-sm hover:bg-blue-950 transition-colors cursor-pointer">
+                            <i data-lucide="save" class="w-4 h-4"></i> Guardar Biografia
                         </button>
                     </div>
                     <div>
                         <div class="border border-gray-300 border-b-0 rounded-t-xl bg-gray-50 px-4 py-3 flex flex-wrap gap-2">
-                            <button type="button" onclick="window.execEditor('bold')" class="p-2 bg-white border border-gray-200 rounded hover:bg-gray-100"><i data-lucide="bold" class="w-4 h-4"></i></button>
-                            <button type="button" onclick="window.execEditor('italic')" class="p-2 bg-white border border-gray-200 rounded hover:bg-gray-100"><i data-lucide="italic" class="w-4 h-4"></i></button>
-                            <button type="button" onclick="window.execEditor('underline')" class="p-2 bg-white border border-gray-200 rounded hover:bg-gray-100"><i data-lucide="underline" class="w-4 h-4"></i></button>
-                            <button type="button" onclick="window.insertEditorLink()" class="px-3 py-1 bg-white border border-gray-200 rounded text-sm hover:bg-gray-100">Link</button>
-                            <button type="button" onclick="window.execEditor('removeFormat')" class="p-1.5 hover:bg-gray-200 rounded text-gray-500 ml-auto" title="Limpar"><i data-lucide="eraser" class="w-5 h-5"></i></button>
+                            <button type="button" onclick="window.execEditor('bold')" class="p-2 bg-white border border-gray-200 rounded hover:bg-gray-100 cursor-pointer"><i data-lucide="bold" class="w-4 h-4"></i></button>
+                            <button type="button" onclick="window.execEditor('italic')" class="p-2 bg-white border border-gray-200 rounded hover:bg-gray-100 cursor-pointer"><i data-lucide="italic" class="w-4 h-4"></i></button>
+                            <button type="button" onclick="window.execEditor('underline')" class="p-2 bg-white border border-gray-200 rounded hover:bg-gray-100 cursor-pointer"><i data-lucide="underline" class="w-4 h-4"></i></button>
+                            <button type="button" onclick="window.insertEditorLink()" class="px-3 py-1 bg-white border border-gray-200 rounded text-sm hover:bg-gray-100 cursor-pointer">Link</button>
+                            <button type="button" onclick="window.execEditor('removeFormat')" class="p-1.5 hover:bg-gray-200 rounded text-gray-500 ml-auto cursor-pointer" title="Limpar"><i data-lucide="eraser" class="w-5 h-5"></i></button>
                         </div>
                         <div id="bio-fulltext" contenteditable="true" class="w-full border border-gray-300 rounded-b-xl px-6 py-6 min-h-[400px] bg-white overflow-y-auto prose prose-blue max-w-none shadow-inner outline-none"></div>
                     </div>
@@ -478,13 +481,48 @@
 
                 <div id="admin-view-config" class="hidden">
                     <div class="flex justify-between items-center mb-6">
-                        <h4 class="text-lg font-semibold text-gray-800">Ajustes do App</h4>
-                        <button onclick="window.saveConfig()" class="bg-blue-900 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-sm hover:bg-blue-950 transition-colors">
-                            <i data-lucide="save" class="w-4 h-4"></i> Salvar
+                        <h4 class="text-lg font-semibold text-gray-800">Ajustes da Aplicação</h4>
+                        <button onclick="window.saveConfig()" class="bg-blue-900 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-sm hover:bg-blue-950 transition-colors cursor-pointer">
+                            <i data-lucide="save" class="w-4 h-4"></i> Guardar Ajustes
                         </button>
                     </div>
                     
-                    <div class="flex flex-col gap-6">
+                    <div class="flex flex-col gap-6 pb-10">
+                        <!-- Identidade e Personalização -->
+                        <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                            <h5 class="font-bold text-gray-900 mb-3"><i data-lucide="palette" class="w-4 h-4 inline mr-1 text-pink-600"></i> Identidade Visual</h5>
+                            
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Nome da App / Educador</label>
+                            <input type="text" id="config-app-name" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-pink-700 bg-white text-sm mb-3">
+                            
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Link do Logo (URL de Imagem quadrada)</label>
+                            <input type="text" id="config-app-logo" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-pink-700 bg-white text-sm mb-4">
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">Tema Padrão do Sistema</label>
+                                    <select id="config-default-theme" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-pink-700 bg-white text-sm cursor-pointer">
+                                        <option value="light">Claro</option>
+                                        <option value="dark">Escuro</option>
+                                        <option value="polen">Pólen</option>
+                                        <option value="cafe">Café</option>
+                                        <option value="verde">Verde</option>
+                                        <option value="azul">Azul</option>
+                                        <option value="vermelho">Vermelho</option>
+                                    </select>
+                                    <p class="text-[10px] text-gray-500 mt-1">Aplica-se ao novo utilizador.</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">Tamanho de Fonte Padrão</label>
+                                    <select id="config-default-font" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-pink-700 bg-white text-sm cursor-pointer">
+                                        <option value="normal">Normal</option>
+                                        <option value="large">Grande</option>
+                                        <option value="xlarge">Extra Grande</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Títulos Principais -->
                         <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200">
                             <h5 class="font-bold text-gray-900 mb-3"><i data-lucide="home" class="w-4 h-4 inline mr-1 text-blue-600"></i> Página Inicial (Conteúdos)</h5>
@@ -510,14 +548,22 @@
                             <input type="text" id="config-lib-subtitle" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-900 bg-white text-sm">
                         </div>
 
+                        <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                            <h5 class="font-bold text-gray-900 mb-3"><i data-lucide="users" class="w-4 h-4 inline mr-1 text-orange-500"></i> Página da Comunidade</h5>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Título da Página</label>
+                            <input type="text" id="config-community-title" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-orange-500 bg-white text-sm mb-3">
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Subtítulo</label>
+                            <input type="text" id="config-community-subtitle" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-orange-500 bg-white text-sm">
+                        </div>
+
                         <!-- Ajustes de Partilha -->
                         <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200">
-                            <h5 class="font-bold text-gray-900 mb-3"><i data-lucide="share-2" class="w-4 h-4 inline mr-1 text-blue-600"></i> Texto de Indicação do App</h5>
+                            <h5 class="font-bold text-gray-900 mb-3"><i data-lucide="share-2" class="w-4 h-4 inline mr-1 text-blue-600"></i> Texto de Indicação da App</h5>
                             <textarea id="config-app-text" rows="3" class="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-900 bg-white text-sm resize-none"></textarea>
-                            <p class="text-xs text-gray-500 mt-2">O link do seu App será adicionado automaticamente no final desta mensagem.</p>
+                            <p class="text-xs text-gray-500 mt-2">O link da sua App será adicionado automaticamente no final desta mensagem.</p>
                         </div>
                         <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200">
-                            <h5 class="font-bold text-gray-900 mb-3"><i data-lucide="users" class="w-4 h-4 inline mr-1 text-green-600"></i> Indicação da Comunidade</h5>
+                            <h5 class="font-bold text-gray-900 mb-3"><i data-lucide="message-circle" class="w-4 h-4 inline mr-1 text-green-600"></i> Indicação da Comunidade</h5>
                             <label class="block text-sm font-bold text-gray-700 mb-1">Link de Convite Principal</label>
                             <input type="text" id="config-community-url" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-900 bg-white text-sm mb-3">
                             <label class="block text-sm font-bold text-gray-700 mb-1">Texto de Indicação</label>
@@ -532,39 +578,39 @@
     </div>
 
     <!-- Editor de Reflexões -->
-    <div id="editor-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center modal-overlay px-4 py-4">
+    <div id="editor-modal" class="hidden fixed inset-0 z-[90] flex items-center justify-center modal-overlay px-4 py-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-full flex flex-col relative overflow-hidden text-gray-900">
-            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50"><h3 id="editor-title" class="text-xl font-bold text-gray-900">Novo Conteúdo</h3><button onclick="window.closeEditor()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-6 h-6"></i></button></div>
+            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50"><h3 id="editor-title" class="text-xl font-bold text-gray-900">Novo Conteúdo</h3><button onclick="window.closeEditor()" class="p-2 text-gray-400 hover:text-gray-600 cursor-pointer"><i data-lucide="x" class="w-6 h-6"></i></button></div>
             <div class="p-6 flex-1 overflow-y-auto flex flex-col gap-6">
                 <input type="hidden" id="edit-post-id">
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200"><p class="text-sm font-bold mb-3">Tipo</p><div class="flex gap-3"><label class="flex items-center gap-2 text-sm"><input type="radio" name="post_type" value="post" id="type-post" checked> Feed</label><label class="flex items-center gap-2 text-sm"><input type="radio" name="post_type" value="page" id="type-page"> Artigo</label></div></div>
-                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200"><p class="text-sm font-bold mb-3">Status</p><div class="flex gap-3"><label class="flex items-center gap-2 text-sm"><input type="radio" name="post_status" value="published" id="status-published" checked> Publicado</label><label class="flex items-center gap-2 text-sm"><input type="radio" name="post_status" value="draft" id="status-draft"> Rascunho</label></div></div>
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200"><p class="text-sm font-bold mb-3">Tipo</p><div class="flex gap-3"><label class="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="post_type" value="post" id="type-post" checked> Feed</label><label class="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="post_type" value="page" id="type-page"> Artigo</label></div></div>
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200"><p class="text-sm font-bold mb-3">Estado</p><div class="flex gap-3"><label class="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="post_status" value="published" id="status-published" checked> Publicado</label><label class="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" name="post_status" value="draft" id="status-draft"> Rascunho</label></div></div>
                 </div>
-                <div class="grid grid-cols-2 gap-4"><input type="text" id="post-title" placeholder="Título" class="col-span-2 border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-900"><input type="text" id="post-subtitle" placeholder="Subtítulo" class="border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-900"><select id="post-category" class="border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-900"></select></div>
+                <div class="grid grid-cols-2 gap-4"><input type="text" id="post-title" placeholder="Título" class="col-span-2 border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-900"><input type="text" id="post-subtitle" placeholder="Subtítulo" class="border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-900"><select id="post-category" class="border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-900 cursor-pointer"></select></div>
                 <div class="bg-blue-50/30 p-5 rounded-xl border border-blue-100 grid grid-cols-2 gap-4"><input type="text" id="post-image" placeholder="Link Capa" class="border border-gray-300 rounded-xl px-4 py-2.5 outline-none"><input type="text" id="post-youtube" placeholder="Link YouTube" class="border border-gray-300 rounded-xl px-4 py-2.5 outline-none"></div>
                 <div>
                     <label class="block text-sm font-bold mb-1">Conteúdo</label>
                     <div class="border border-gray-300 border-b-0 rounded-t-xl bg-gray-50 px-4 py-3 flex flex-wrap gap-2">
-                        <button type="button" onclick="window.execEditor('bold')" class="p-2 bg-white border border-gray-200 rounded shadow-sm hover:bg-gray-100"><i data-lucide="bold" class="w-4 h-4"></i></button>
-                        <button type="button" onclick="window.execEditor('italic')" class="p-2 bg-white border border-gray-200 rounded shadow-sm hover:bg-gray-100"><i data-lucide="italic" class="w-4 h-4"></i></button>
-                        <button type="button" onclick="window.execEditor('underline')" class="p-2 bg-white border border-gray-200 rounded shadow-sm hover:bg-gray-100"><i data-lucide="underline" class="w-4 h-4"></i></button>
-                        <button type="button" onclick="window.insertEditorLink()" class="px-3 py-1 bg-white border border-gray-200 rounded shadow-sm text-sm hover:bg-gray-100">Link</button>
-                        <button type="button" onclick="window.insertEditorImage()" class="px-3 py-1 bg-white border border-gray-200 rounded shadow-sm text-sm hover:bg-gray-100">Img</button>
-                        <button type="button" onclick="window.insertEditorVideo()" class="px-3 py-1 bg-white border border-gray-200 rounded shadow-sm text-sm hover:bg-gray-100">YT</button>
-                        <button type="button" onclick="window.insertEditorButton()" class="px-3 py-1 bg-green-50 text-green-800 border-green-200 border rounded shadow-sm text-sm hover:bg-green-100 ml-auto">Botão</button>
+                        <button type="button" onclick="window.execEditor('bold')" class="p-2 bg-white border border-gray-200 rounded shadow-sm hover:bg-gray-100 cursor-pointer"><i data-lucide="bold" class="w-4 h-4"></i></button>
+                        <button type="button" onclick="window.execEditor('italic')" class="p-2 bg-white border border-gray-200 rounded shadow-sm hover:bg-gray-100 cursor-pointer"><i data-lucide="italic" class="w-4 h-4"></i></button>
+                        <button type="button" onclick="window.execEditor('underline')" class="p-2 bg-white border border-gray-200 rounded shadow-sm hover:bg-gray-100 cursor-pointer"><i data-lucide="underline" class="w-4 h-4"></i></button>
+                        <button type="button" onclick="window.insertEditorLink()" class="px-3 py-1 bg-white border border-gray-200 rounded shadow-sm text-sm hover:bg-gray-100 cursor-pointer">Link</button>
+                        <button type="button" onclick="window.insertEditorImage()" class="px-3 py-1 bg-white border border-gray-200 rounded shadow-sm text-sm hover:bg-gray-100 cursor-pointer">Img</button>
+                        <button type="button" onclick="window.insertEditorVideo()" class="px-3 py-1 bg-white border border-gray-200 rounded shadow-sm text-sm hover:bg-gray-100 cursor-pointer">YT</button>
+                        <button type="button" onclick="window.insertEditorButton()" class="px-3 py-1 bg-green-50 text-green-800 border-green-200 border rounded shadow-sm text-sm hover:bg-green-100 ml-auto cursor-pointer">Botão</button>
                     </div>
                     <div id="post-fulltext" contenteditable="true" class="w-full border border-gray-300 rounded-b-xl px-6 py-6 min-h-[300px] bg-white overflow-y-auto prose prose-blue max-w-none shadow-inner outline-none"></div>
                 </div>
             </div>
-            <div class="p-6 border-t border-gray-100 bg-gray-50 flex justify-between"><button id="btn-delete-editor" onclick="window.deletePost(document.getElementById('edit-post-id').value, true)" class="hidden text-red-600 font-bold px-4 hover:bg-red-50 rounded-xl py-2 transition-colors">Excluir</button><div class="flex gap-3 ml-auto"><button onclick="window.closeEditor()" class="px-6 py-2.5 border border-gray-300 rounded-xl font-medium hover:bg-gray-100">Cancelar</button><button onclick="window.savePost()" class="px-8 py-2.5 bg-blue-900 text-white rounded-xl font-bold shadow-lg hover:bg-blue-950">Salvar</button></div></div>
+            <div class="p-6 border-t border-gray-100 bg-gray-50 flex justify-between"><button id="btn-delete-editor" onclick="window.deletePost(document.getElementById('edit-post-id').value, true)" class="hidden text-red-600 font-bold px-4 hover:bg-red-50 rounded-xl py-2 transition-colors cursor-pointer">Excluir</button><div class="flex gap-3 ml-auto"><button onclick="window.closeEditor()" class="px-6 py-2.5 border border-gray-300 rounded-xl font-medium hover:bg-gray-100 cursor-pointer">Cancelar</button><button onclick="window.savePost()" class="px-8 py-2.5 bg-blue-900 text-white rounded-xl font-bold shadow-lg hover:bg-blue-950 cursor-pointer">Guardar</button></div></div>
         </div>
     </div>
 
     <!-- Editor de Cursos -->
-    <div id="course-editor-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center modal-overlay px-4 py-4">
+    <div id="course-editor-modal" class="hidden fixed inset-0 z-[90] flex items-center justify-center modal-overlay px-4 py-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-full flex flex-col relative overflow-hidden text-gray-900">
-            <div class="p-5 border-b flex justify-between items-center bg-purple-50/50"><h3 id="course-editor-title" class="text-xl font-bold text-purple-900">Curso</h3><button onclick="window.closeCourseEditor()" class="text-gray-400"><i data-lucide="x" class="w-6 h-6"></i></button></div>
+            <div class="p-5 border-b flex justify-between items-center bg-purple-50/50"><h3 id="course-editor-title" class="text-xl font-bold text-purple-900">Curso</h3><button onclick="window.closeCourseEditor()" class="p-2 text-gray-400 hover:text-gray-600 cursor-pointer"><i data-lucide="x" class="w-6 h-6"></i></button></div>
             <div class="p-6 flex-1 overflow-y-auto flex flex-col gap-6">
                 <input type="hidden" id="edit-course-id">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -577,15 +623,15 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-gray-200 pt-6">
                     <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                        <label class="flex items-center gap-2 font-bold mb-3"><input type="checkbox" id="course-has-presential" class="w-4 h-4" onchange="window.toggleCourseFormats()"> Turma Presencial / Evento</label>
+                        <label class="flex items-center gap-2 font-bold mb-3 cursor-pointer"><input type="checkbox" id="course-has-presential" class="w-4 h-4 cursor-pointer" onchange="window.toggleCourseFormats()"> Turma Presencial / Evento</label>
                         <div id="course-presential-fields" class="flex flex-col gap-2 opacity-50 pointer-events-none">
-                            <input type="text" id="course-price-presential" class="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Preço (Ex: R$ 149,90 ou Gratuito)" disabled>
+                            <input type="text" id="course-price-presential" class="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Preço (Ex: 149,90€ ou Gratuito)" disabled>
                             <input type="text" id="course-btn-presential" class="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Texto Botão (Ex: Garantir Vaga)" disabled>
                             <input type="text" id="course-link-presential" class="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Link de Inscrição / Compra" disabled>
                         </div>
                     </div>
                     <div class="bg-purple-50/50 p-4 rounded-xl border border-purple-100">
-                        <label class="flex items-center gap-2 font-bold mb-3"><input type="checkbox" id="course-has-online" class="w-4 h-4" onchange="window.toggleCourseFormats()"> Curso Online / Gravado</label>
+                        <label class="flex items-center gap-2 font-bold mb-3 cursor-pointer"><input type="checkbox" id="course-has-online" class="w-4 h-4 cursor-pointer" onchange="window.toggleCourseFormats()"> Curso Online / Gravado</label>
                         <div id="course-online-fields" class="flex flex-col gap-2 opacity-50 pointer-events-none">
                             <input type="text" id="course-price-online" class="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Preço ou 'Gratuito'" disabled>
                             <input type="text" id="course-btn-online" class="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Texto Botão (Ex: Comprar Acesso)" disabled>
@@ -597,15 +643,15 @@
                 <div>
                     <label class="block text-sm font-bold mb-1">Sinopse / Conteúdo Programático</label>
                     <div class="border border-gray-300 border-b-0 rounded-t-xl bg-gray-50 px-4 py-3 flex flex-wrap gap-2">
-                        <button type="button" onclick="window.execEditor('bold')" class="p-2 bg-white border border-gray-200 rounded"><i data-lucide="bold" class="w-4 h-4"></i></button>
-                        <button type="button" onclick="window.insertEditorImage()" class="px-3 py-1 bg-white border border-gray-200 rounded text-sm">Img</button>
+                        <button type="button" onclick="window.execEditor('bold')" class="p-2 bg-white border border-gray-200 rounded cursor-pointer"><i data-lucide="bold" class="w-4 h-4"></i></button>
+                        <button type="button" onclick="window.insertEditorImage()" class="px-3 py-1 bg-white border border-gray-200 rounded text-sm cursor-pointer">Img</button>
                     </div>
                     <div id="course-fulltext" contenteditable="true" class="w-full border border-gray-300 rounded-b-xl px-6 py-6 min-h-[250px] bg-white overflow-y-auto prose prose-purple max-w-none shadow-inner outline-none"></div>
                 </div>
                 <div class="border-t border-gray-200 pt-6 mt-2">
                     <h4 class="text-sm font-bold text-gray-900 mb-4"><i data-lucide="shield-alert" class="w-4 h-4 inline mr-1 text-red-600"></i> Moderação e Métricas</h4>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                        <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Total de Curtidas</label><input type="number" id="course-likes" class="w-full border border-gray-300 bg-white rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-purple-700" value="0"></div>
+                        <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Total de Gostos</label><input type="number" id="course-likes" class="w-full border border-gray-300 bg-white rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-purple-700" value="0"></div>
                     </div>
                     <div id="course-moderation-section" class="hidden">
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Avaliações Ativas</label>
@@ -613,14 +659,14 @@
                     </div>
                 </div>
             </div>
-            <div class="p-6 border-t bg-gray-50 flex justify-between"><button id="btn-delete-course" onclick="window.deleteCourse(document.getElementById('edit-course-id').value)" class="hidden px-5 py-2.5 text-red-600 font-bold hover:bg-red-50 rounded-xl transition-colors"><i data-lucide="trash-2" class="w-4 h-4 inline mr-2"></i> Excluir</button><div class="flex gap-3 ml-auto"><button onclick="window.closeCourseEditor()" class="px-6 py-2.5 border border-gray-300 rounded-xl font-medium hover:bg-gray-100">Cancelar</button><button onclick="window.saveCourse()" id="btn-save-course" class="px-8 py-2.5 bg-purple-700 text-white rounded-xl font-bold shadow-lg hover:bg-purple-800">Salvar Curso</button></div></div>
+            <div class="p-6 border-t bg-gray-50 flex justify-between"><button id="btn-delete-course" onclick="window.deleteCourse(document.getElementById('edit-course-id').value)" class="hidden px-5 py-2.5 text-red-600 font-bold hover:bg-red-50 rounded-xl transition-colors cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4 inline mr-2"></i> Excluir</button><div class="flex gap-3 ml-auto"><button onclick="window.closeCourseEditor()" class="px-6 py-2.5 border border-gray-300 rounded-xl font-medium hover:bg-gray-100 cursor-pointer">Cancelar</button><button onclick="window.saveCourse()" id="btn-save-course" class="px-8 py-2.5 bg-purple-700 text-white rounded-xl font-bold shadow-lg hover:bg-purple-800 cursor-pointer">Guardar Curso</button></div></div>
         </div>
     </div>
 
     <!-- Editor de Livros -->
-    <div id="book-editor-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center modal-overlay px-4 py-4">
+    <div id="book-editor-modal" class="hidden fixed inset-0 z-[90] flex items-center justify-center modal-overlay px-4 py-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-full flex flex-col relative overflow-hidden text-gray-900">
-            <div class="p-5 border-b flex justify-between items-center bg-green-50/50"><h3 id="book-editor-title" class="text-xl font-bold text-green-900">Livro</h3><button onclick="window.closeBookEditor()" class="text-gray-400"><i data-lucide="x" class="w-6 h-6"></i></button></div>
+            <div class="p-5 border-b flex justify-between items-center bg-green-50/50"><h3 id="book-editor-title" class="text-xl font-bold text-green-900">Livro</h3><button onclick="window.closeBookEditor()" class="p-2 text-gray-400 hover:text-gray-600 cursor-pointer"><i data-lucide="x" class="w-6 h-6"></i></button></div>
             <div class="p-6 flex-1 overflow-y-auto flex flex-col gap-6">
                 <input type="hidden" id="edit-book-id">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -633,15 +679,15 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-gray-200 pt-6">
                     <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                        <label class="flex items-center gap-2 font-bold mb-3"><input type="checkbox" id="book-has-physical" class="w-4 h-4" onchange="window.toggleBookFormats()"> Livro Físico</label>
+                        <label class="flex items-center gap-2 font-bold mb-3 cursor-pointer"><input type="checkbox" id="book-has-physical" class="w-4 h-4 cursor-pointer" onchange="window.toggleBookFormats()"> Livro Físico</label>
                         <div id="book-physical-fields" class="flex flex-col gap-2 opacity-50 pointer-events-none">
-                            <input type="text" id="book-price-physical" class="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Preço (Ex: R$ 49,90 ou Gratuito)" disabled>
+                            <input type="text" id="book-price-physical" class="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Preço (Ex: 19,90€ ou Gratuito)" disabled>
                             <input type="text" id="book-btn-physical" class="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Texto Botão Físico (Ex: Comprar)" disabled>
                             <input type="text" id="book-link-physical" class="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Link de Venda/Acesso Físico" disabled>
                         </div>
                     </div>
                     <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-                        <label class="flex items-center gap-2 font-bold mb-3"><input type="checkbox" id="book-has-ebook" class="w-4 h-4" onchange="window.toggleBookFormats()"> E-book (Digital)</label>
+                        <label class="flex items-center gap-2 font-bold mb-3 cursor-pointer"><input type="checkbox" id="book-has-ebook" class="w-4 h-4 cursor-pointer" onchange="window.toggleBookFormats()"> E-book (Digital)</label>
                         <div id="book-ebook-fields" class="flex flex-col gap-2 opacity-50 pointer-events-none">
                             <input type="text" id="book-price-ebook" class="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Preço ou 'Gratuito'" disabled>
                             <input type="text" id="book-btn-ebook" class="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Texto Botão E-book (Ex: Baixar E-book)" disabled>
@@ -653,15 +699,15 @@
                 <div>
                     <label class="block text-sm font-bold mb-1">Sinopse da Página de Vendas</label>
                     <div class="border border-gray-300 border-b-0 rounded-t-xl bg-gray-50 px-4 py-3 flex flex-wrap gap-2">
-                        <button type="button" onclick="window.execEditor('bold')" class="p-2 bg-white border border-gray-200 rounded"><i data-lucide="bold" class="w-4 h-4"></i></button>
-                        <button type="button" onclick="window.insertEditorImage()" class="px-3 py-1 bg-white border border-gray-200 rounded text-sm">Img</button>
+                        <button type="button" onclick="window.execEditor('bold')" class="p-2 bg-white border border-gray-200 rounded cursor-pointer"><i data-lucide="bold" class="w-4 h-4"></i></button>
+                        <button type="button" onclick="window.insertEditorImage()" class="px-3 py-1 bg-white border border-gray-200 rounded text-sm cursor-pointer">Img</button>
                     </div>
                     <div id="book-fulltext" contenteditable="true" class="w-full border border-gray-300 rounded-b-xl px-6 py-6 min-h-[250px] bg-white overflow-y-auto prose prose-green max-w-none shadow-inner outline-none"></div>
                 </div>
                 <div class="border-t border-gray-200 pt-6 mt-2">
                     <h4 class="text-sm font-bold text-gray-900 mb-4"><i data-lucide="shield-alert" class="w-4 h-4 inline mr-1 text-red-600"></i> Moderação e Métricas</h4>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                        <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Total de Curtidas</label><input type="number" id="book-likes" class="w-full border border-gray-300 bg-white rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-green-700" value="0"></div>
+                        <div><label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Total de Gostos</label><input type="number" id="book-likes" class="w-full border border-gray-300 bg-white rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-green-700" value="0"></div>
                     </div>
                     <div id="book-moderation-section" class="hidden">
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Comentários Ativos</label>
@@ -669,11 +715,11 @@
                     </div>
                 </div>
             </div>
-            <div class="p-6 border-t bg-gray-50 flex justify-between"><button id="btn-delete-book" onclick="window.deleteBook(document.getElementById('edit-book-id').value)" class="hidden px-5 py-2.5 text-red-600 font-bold hover:bg-red-50 rounded-xl transition-colors"><i data-lucide="trash-2" class="w-4 h-4 inline mr-2"></i> Excluir</button><div class="flex gap-3 ml-auto"><button onclick="window.closeBookEditor()" class="px-6 py-2.5 border border-gray-300 rounded-xl font-medium hover:bg-gray-100">Cancelar</button><button onclick="window.saveBook()" id="btn-save-book" class="px-8 py-2.5 bg-green-700 text-white rounded-xl font-bold shadow-lg hover:bg-green-800">Salvar Livro</button></div></div>
+            <div class="p-6 border-t bg-gray-50 flex justify-between"><button id="btn-delete-book" onclick="window.deleteBook(document.getElementById('edit-book-id').value)" class="hidden px-5 py-2.5 text-red-600 font-bold hover:bg-red-50 rounded-xl transition-colors cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4 inline mr-2"></i> Excluir</button><div class="flex gap-3 ml-auto"><button onclick="window.closeBookEditor()" class="px-6 py-2.5 border border-gray-300 rounded-xl font-medium hover:bg-gray-100 cursor-pointer">Cancelar</button><button onclick="window.saveBook()" id="btn-save-book" class="px-8 py-2.5 bg-green-700 text-white rounded-xl font-bold shadow-lg hover:bg-green-800 cursor-pointer">Guardar Material</button></div></div>
         </div>
     </div>
 
-    <div id="toast" class="fixed bottom-6 right-6 bg-green-700 text-white px-8 py-4 rounded-2xl shadow-2xl transform transition-transform duration-300 translate-y-32 opacity-0 z-50 flex items-center gap-3 font-bold border-b-4 border-green-900">
+    <div id="toast" class="fixed bottom-6 right-6 bg-green-700 text-white px-8 py-4 rounded-2xl shadow-2xl transform transition-transform duration-300 translate-y-32 opacity-0 z-[100] flex items-center gap-3 font-bold border-b-4 border-green-900 pointer-events-none">
         <i data-lucide="check-circle" class="w-6 h-6"></i> <span id="toast-msg">Ação concluída!</span>
     </div>
 
@@ -687,7 +733,8 @@
         
         window.blogPosts = []; window.siteCategories = []; window.siteBooks = []; window.siteCourses = []; window.siteGroups = [];
         window.siteBio = ""; window.siteConfig = null;
-        window.defaultBioText = `<p><strong>Luiz Henrique Magalhães</strong> é professor de matemática desde 2001, com foco no desenvolvimento de alunos entre 9 e 17 anos. É fundador do <em>PLH Preparatórios</em>, uma plataforma dedicada ao Desenvolvimento Sistemático de jovens, que reúne cursos, materiais e acompanhamento para famílias que querem ir além do conteúdo escolar comum.</p><p>Ao longo de mais de vinte anos na linha de frente da educação, ele acompanhou centenas de famílias de perto. Foi nessa trincheira que observou com clareza o que realmente funciona e o que não funciona quando o assunto é aprender a estudar, organizar o tempo e desenvolver constância e resiliência.</p><p>Especialista na preparação para Colégios Militares, o professor Luiz atua como mentor para alunos que buscam a alta performance académica. Ele é o arquiteto de uma metodologia que foca no Desenvolvimento Sistemático, unindo ferramentas práticas, ordem e disciplina.</p><p>É autor de diversas obras focadas na área do desenvolvimento e da vida prática, incluindo livros como <em>Dinheiro com Propósito</em>, <em>Rotina, Tempo e Método</em> e manuais fundamentais para a aprovação em concursos militares.</p><p>Antes de qualquer título, ofício ou projeto, Luiz é, acima de tudo, o marido da Giselle e o pai de três filhos: Beatriz, Luiz Guilherme e Maria Eduarda. Como ele mesmo costuma dizer, sua família foi e continua sendo a sua "primeira sala de aula sobre o que realmente importa". Atualmente, a família reside na cidade de Governador Valadares, Minas Gerais, de onde ele escreve, leciona e coordena esta crescente comunidade de estudos e desenvolvimento.</p>`;
+        
+        window.defaultBioText = `<p>Insira a sua apresentação no <strong>Painel de Administração</strong>.</p>`;
 
         window.currentCategoryFilter = null; window.currentOpenBookId = null; window.currentOpenCourseId = null; window.currentEditorId = 'post-fulltext'; window.deepLinkChecked = false;
 
@@ -703,7 +750,7 @@
             const sList = document.getElementById('categories-list'); 
             if(sList) {
                 sList.innerHTML = allCats.map(c => 
-                    `<a href="#" onclick="window.filterByCategory('${c.replace(/'/g, "\\'")}'); window.toggleMobileMenu(); return false;" class="hover:sys-text-accent py-2 flex items-center gap-3 font-bold text-base transition-colors">
+                    `<a href="#" onclick="window.filterByCategory('${c.replace(/'/g, "\\'")}'); window.toggleMobileMenu(); return false;" class="hover:sys-text-accent py-3 flex items-center gap-3 font-bold text-base transition-colors">
                         <i data-lucide="folder-open" class="w-4 h-4"></i> ${c}
                     </a>`
                 ).join('') || '<span class="text-xs italic sys-text-secondary">Nenhuma pasta encontrada.</span>'; 
@@ -712,7 +759,7 @@
             const bList = document.getElementById('bottom-categories-list'); 
             if(bList) {
                 bList.innerHTML = allCats.map(c => 
-                    `<button onclick="window.filterByCategory('${c.replace(/'/g, "\\'")}'); window.toggleCategoriesModal(true);" class="w-full text-left px-5 py-4 sys-bg-body sys-text-primary hover:sys-text-accent font-black rounded-2xl transition-colors flex items-center gap-3 border sys-border shadow-sm">
+                    `<button onclick="window.filterByCategory('${c.replace(/'/g, "\\'")}'); window.toggleCategoriesModal(true);" class="w-full text-left px-5 py-4 sys-bg-body sys-text-primary hover:sys-text-accent font-black rounded-2xl transition-colors flex items-center gap-3 border sys-border shadow-sm cursor-pointer">
                         <i data-lucide="folder-open" class="w-5 h-5"></i> ${c}
                     </button>`
                 ).join('') || '<p class="text-sm sys-text-secondary text-center py-4">Nenhuma pasta encontrada.</p>';
@@ -740,18 +787,42 @@
                         if(docSnap.exists()) { 
                             window.siteConfig = docSnap.data(); 
                             
-                            // Atualizar Cabeçalhos Visualmente
+                            // IDENTIDADE VISUAL (Nome e Logo)
+                            if (window.siteConfig.appName) {
+                                const nameEl = document.getElementById('header-app-name');
+                                if (nameEl) nameEl.innerText = window.siteConfig.appName;
+                            }
+                            if (window.siteConfig.appLogo) {
+                                const logoEl = document.getElementById('header-app-logo');
+                                if (logoEl) logoEl.src = window.getDriveImageUrl(window.siteConfig.appLogo);
+                            }
+
+                            // TEMA E FONTE (Forçar o padrão apenas se o utilizador não tiver escolhido um no dispositivo)
+                            if (!localStorage.getItem('user-theme-preference') && window.siteConfig.defaultTheme) {
+                                window.setSiteTheme(window.siteConfig.defaultTheme, false);
+                            }
+                            if (!localStorage.getItem('user-font-preference') && window.siteConfig.defaultFontSize) {
+                                window.setSiteFontSize(window.siteConfig.defaultFontSize, false);
+                            }
+
+                            // TÍTULOS E TEXTOS DAS PÁGINAS
                             const libTitleEl = document.getElementById('lib-title');
                             const libSubEl = document.getElementById('lib-sub');
                             if (libTitleEl) libTitleEl.innerText = window.siteConfig.libTitle || 'Biblioteca';
-                            if (libSubEl) libSubEl.innerText = window.siteConfig.libSubtitle || 'Livros, e-books e materiais para o desenvolvimento da autonomia e rotina de estudos.';
+                            if (libSubEl) libSubEl.innerText = window.siteConfig.libSubtitle || 'Material para estudo e aprofundamento.';
 
                             const crsTitleEl = document.getElementById('crs-title');
                             const crsSubEl = document.getElementById('crs-sub');
                             if (crsTitleEl) crsTitleEl.innerText = window.siteConfig.crsTitle || 'Cursos e Eventos';
-                            if (crsSubEl) crsSubEl.innerText = window.siteConfig.crsSubtitle || 'Cursos online, mentorias e eventos focados em alta performance.';
+                            if (crsSubEl) crsSubEl.innerText = window.siteConfig.crsSubtitle || 'Cursos online, mentorias e eventos presenciais.';
 
-                            window.renderPostsFeed(); // Refresh Home Header
+                            const comTitleEl = document.getElementById('community-page-title');
+                            const comSubEl = document.getElementById('community-page-subtitle');
+                            if (comTitleEl) comTitleEl.innerText = window.siteConfig.communityTitle || 'A Nossa Comunidade';
+                            if (comSubEl) comSubEl.innerText = window.siteConfig.communitySubtitle || 'Um espaço focado no desenvolvimento em rede.';
+
+                            window.updateAppManifest(window.siteConfig);
+                            window.renderPostsFeed(); // Refresh Home Header com os títulos atualizados
                         } 
                         if (!document.getElementById('dashboard-modal').classList.contains('hidden') && !document.getElementById('admin-view-config').classList.contains('hidden')) {
                             window.renderAdminConfig(); 
@@ -761,9 +832,27 @@
             });
         };
 
+        window.setSiteTheme = (theme, saveUserPref = true) => { 
+            document.documentElement.className = document.documentElement.className.replace(/theme-\w+/g, '') + ' theme-' + theme; 
+            localStorage.setItem('site-theme', theme); 
+            if (saveUserPref) localStorage.setItem('user-theme-preference', 'true');
+            const menu = document.getElementById('theme-menu');
+            if(menu) menu.classList.add('hidden'); 
+        };
+        
+        window.setSiteFontSize = (size, saveUserPref = true) => {
+            const html = document.documentElement; 
+            html.className = html.className.replace(/font-size-\w+/g, '') + ' font-size-' + size; 
+            localStorage.setItem('site-font-size', size); 
+            if (saveUserPref) localStorage.setItem('user-font-preference', 'true');
+        };
+
         window.toggleThemeMenu = (e) => { if(e) e.stopPropagation(); document.getElementById('theme-menu').classList.toggle('hidden'); };
-        window.setSiteTheme = (theme) => { document.documentElement.className = document.documentElement.className.replace(/theme-\w+/g, '') + ' theme-' + theme; localStorage.setItem('site-theme', theme); document.getElementById('theme-menu').classList.add('hidden'); };
-        window.cycleFontSize = () => { const html = document.documentElement; let newSize = html.classList.contains('font-size-normal') ? 'large' : (html.classList.contains('font-size-large') ? 'xlarge' : 'normal'); html.className = html.className.replace(/font-size-\w+/g, '') + ' font-size-' + newSize; localStorage.setItem('site-font-size', newSize); };
+        window.cycleFontSize = () => { 
+            const html = document.documentElement; 
+            let newSize = html.classList.contains('font-size-normal') ? 'large' : (html.classList.contains('font-size-large') ? 'xlarge' : 'normal'); 
+            window.setSiteFontSize(newSize, true);
+        };
         document.addEventListener('click', (e) => { const menu = document.getElementById('theme-menu'); if (menu && !menu.classList.contains('hidden') && !e.target.closest('.relative')) menu.classList.add('hidden'); });
 
         window.showHome = () => { ['article-view','library-view','book-detail-view','community-view', 'bio-view', 'courses-view', 'course-detail-view'].forEach(id=>document.getElementById(id).classList.add('hidden')); document.getElementById('home-view').classList.remove('hidden'); window.currentOpenBookId = null; window.currentOpenCourseId = null; window.renderPostsFeed(); window.scrollTo(0,0); };
@@ -801,8 +890,8 @@
                 `<div class="flex justify-between items-center p-4 border border-gray-200 rounded-xl bg-white shadow-sm">
                     <span class="font-bold text-gray-800">${c.name}</span>
                     <div class="flex gap-2">
-                        <button onclick="window.editCategory('${c.id}', '${c.name.replace(/'/g, "\\'")}')" class="p-2 bg-blue-50 text-blue-900 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                        <button onclick="window.deleteCategory('${c.id}')" class="p-2 bg-red-50 text-red-600 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <button onclick="window.editCategory('${c.id}', '${c.name.replace(/'/g, "\\'")}')" class="p-3 bg-blue-50 text-blue-900 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        <button onclick="window.deleteCategory('${c.id}')" class="p-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
                 </div>`
             ).join('') || '<p class="text-center text-gray-400 py-6">Vazio.</p>'; 
@@ -813,7 +902,7 @@
         window.openGroupEditor = () => {
             document.getElementById('edit-group-id').value = '';
             document.getElementById('group-name').value = '';
-            document.getElementById('group-link').value = window.siteConfig?.communityShareUrl || 'https://chat.whatsapp.com/Gz85l2zmg3p20XsOqgzB0h';
+            document.getElementById('group-link').value = window.siteConfig?.communityShareUrl || 'https://chat.whatsapp.com/';
             document.getElementById('group-status-open').checked = true;
             document.getElementById('group-editor-title').innerText = "Novo Grupo";
             document.getElementById('btn-delete-group').classList.add('hidden');
@@ -824,7 +913,7 @@
             const btn = document.getElementById('btn-save-group'); btn.disabled = true;
             const id = document.getElementById('edit-group-id').value;
             const data = {
-                name: document.getElementById('group-name').value || "Grupo PLH",
+                name: document.getElementById('group-name').value || "Grupo da Comunidade",
                 link: document.getElementById('group-link').value || "#",
                 status: document.querySelector('input[name="group_status"]:checked').value
             };
@@ -851,7 +940,7 @@
                         <div><p class="font-bold text-gray-900">${g.name}</p><p class="text-xs text-gray-500 truncate max-w-[200px]">${g.link}</p></div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="window.editGroup('${g.id}')" class="p-2 bg-blue-50 text-blue-900 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        <button onclick="window.editGroup('${g.id}')" class="p-3 bg-blue-50 text-blue-900 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                     </div>
                 </div>`
             ).join('') || '<p class="text-center text-gray-400 py-6">Nenhum grupo configurado.</p>';
@@ -864,10 +953,10 @@
             if(window.siteGroups.length === 0) { list.innerHTML = `<p class="text-center sys-text-secondary py-10 italic">Nenhum grupo aberto no momento. Fique atento!</p>`; return; }
             list.innerHTML = window.siteGroups.map(g => {
                 if (g.status === 'full') {
-                    return `<div class="flex items-center justify-between p-4 sys-bg-surface border sys-border rounded-2xl opacity-60 grayscale"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center shrink-0"><i data-lucide="lock" class="w-5 h-5 text-gray-500"></i></div><div><p class="font-black sys-text-primary">${g.name}</p><p class="text-xs sys-text-secondary font-bold uppercase tracking-wider">Lotação Máxima</p></div></div><button class="bg-gray-200 text-gray-500 px-4 py-2 rounded-xl font-bold text-xs uppercase cursor-not-allowed">Lotado</button></div>`;
+                    return `<div class="flex items-center justify-between p-4 sys-bg-surface border sys-border rounded-2xl opacity-60 grayscale"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center shrink-0"><i data-lucide="lock" class="w-5 h-5 text-gray-500"></i></div><div><p class="font-black sys-text-primary">${g.name}</p><p class="text-xs sys-text-secondary font-bold uppercase tracking-wider">Lotação Máxima</p></div></div><button class="bg-gray-200 text-gray-500 px-4 py-3 rounded-xl font-bold text-xs uppercase cursor-not-allowed">Lotado</button></div>`;
                 } else {
                     const safeLink = g.link.startsWith('http') ? g.link : 'https://'+g.link;
-                    return `<div class="flex items-center justify-between p-4 sys-bg-surface border-2 border-green-500 rounded-2xl shadow-lg ring-4 ring-green-500/10 transform transition-all hover:scale-[1.02]"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0 animate-pulse"><i data-lucide="unlock" class="w-5 h-5 text-green-600"></i></div><div><p class="font-black sys-text-primary">${g.name}</p><p class="text-xs text-green-600 font-black uppercase tracking-wider">Vagas Abertas</p></div></div><a href="${safeLink}" target="_blank" class="bg-green-600 text-white hover:bg-green-700 px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wide transition-colors shadow-md">Entrar</a></div>`;
+                    return `<div class="flex items-center justify-between p-4 sys-bg-surface border-2 border-green-500 rounded-2xl shadow-lg ring-4 ring-green-500/10 transform transition-all hover:scale-[1.02] cursor-pointer" onclick="window.open('${safeLink}', '_blank')"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0 animate-pulse"><i data-lucide="unlock" class="w-5 h-5 text-green-600"></i></div><div><p class="font-black sys-text-primary">${g.name}</p><p class="text-xs text-green-600 font-black uppercase tracking-wider">Vagas Abertas</p></div></div><button class="bg-green-600 text-white hover:bg-green-700 px-5 py-3 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wide transition-colors shadow-md">Entrar</button></div>`;
                 }
             }).join('');
             lucide.createIcons();
@@ -925,7 +1014,7 @@
             list.innerHTML = window.siteCourses.map(c => {
                 let badge = ''; const hasPres = c.hasPresential; const hasOn = c.hasOnline;
                 if(hasPres && hasOn) badge = 'Híbrido'; else if(hasPres) badge = 'Presencial'; else badge = 'Online';
-                return `<div class="flex items-center gap-4 p-3 border border-gray-200 rounded-xl bg-white shadow-sm cursor-pointer hover:border-purple-600 transition-colors" onclick="window.editCourse('${c.id}')"><img src="${window.getDriveImageUrl(c.cover)}" class="w-12 h-16 object-cover rounded bg-gray-100" onerror="this.src='https://via.placeholder.com/48x64?text=Curso'"><div class="flex-1 truncate"><p class="font-bold text-gray-900 text-sm truncate">${c.title}</p><p class="text-xs text-purple-600 mt-0.5 font-bold uppercase tracking-wider">${badge}</p></div><div class="flex gap-2 shrink-0"><button class="p-2 bg-purple-50 text-purple-900 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button></div></div>`;
+                return `<div class="flex items-center gap-4 p-3 border border-gray-200 rounded-xl bg-white shadow-sm cursor-pointer hover:border-purple-600 transition-colors" onclick="window.editCourse('${c.id}')"><img src="${window.getDriveImageUrl(c.cover)}" class="w-12 h-16 object-cover rounded bg-gray-100" onerror="this.src='https://via.placeholder.com/48x64?text=Curso'"><div class="flex-1 truncate"><p class="font-bold text-gray-900 text-sm truncate">${c.title}</p><p class="text-xs text-purple-600 mt-0.5 font-bold uppercase tracking-wider">${badge}</p></div><div class="flex gap-2 shrink-0"><button class="p-3 bg-purple-50 text-purple-900 rounded-lg hover:bg-purple-100 transition-colors cursor-pointer"><i data-lucide="edit-3" class="w-4 h-4"></i></button></div></div>`;
             }).join('') || '<p class="col-span-full text-center text-gray-400 py-6">Nenhum curso.</p>';
             lucide.createIcons();
         };
@@ -939,7 +1028,7 @@
                 let isFree = hasOn && (pOn.toLowerCase().includes('grat') || pOn.toLowerCase().includes('grátis'));
                 let topBadge = isFree ? `<div class="absolute top-2 right-2 bg-blue-600 text-white text-[10px] sm:text-xs font-black px-2 py-1 rounded-lg shadow-md tracking-wide uppercase">GRATUITO</div>` : '';
                 return `
-                    <div onclick="window.openCourseDetail('${c.id}')" class="flex flex-col group sys-bg-surface rounded-2xl shadow-sm sys-border border overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer">
+                    <div onclick="window.openCourseDetail('${c.id}')" class="flex flex-col group sys-bg-surface rounded-2xl shadow-sm sys-border border overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer relative z-10">
                         <div class="aspect-[2/3] bg-gray-100 relative overflow-hidden border-b sys-border">
                             <img src="${window.getDriveImageUrl(c.cover)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onerror="this.src='https://via.placeholder.com/400x600?text=Capa'">
                             ${topBadge}
@@ -970,15 +1059,15 @@
             let tableRows = ''; let buttonsHtml = '';
             if(hasPres) {
                 tableRows += `<tr class="border-b sys-border"><td class="p-3 font-medium flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4"></i> Presencial</td><td class="p-3 font-black sys-text-accent">${pPres || '-'}</td></tr>`;
-                let txt = c.btnPresential || 'Garantir Vaga'; buttonsHtml += `<a href="${safeLPres}" target="_blank" class="w-full flex justify-center items-center gap-2 sys-bg-accent text-white py-4 px-6 rounded-xl font-black text-sm uppercase tracking-wide hover:opacity-90 shadow-xl transition-all hover:-translate-y-1 mb-3">${txt} <i data-lucide="check-circle-2" class="w-4 h-4"></i></a>`;
+                let txt = c.btnPresential || 'Garantir Vaga'; buttonsHtml += `<a href="${safeLPres}" target="_blank" class="w-full flex justify-center items-center gap-2 sys-bg-accent text-white py-4 px-6 rounded-xl font-black text-sm uppercase tracking-wide hover:opacity-90 shadow-xl transition-all hover:-translate-y-1 mb-3 cursor-pointer">${txt} <i data-lucide="check-circle-2" class="w-4 h-4"></i></a>`;
             }
             if(hasOn) {
                 let isFree = pOn.toLowerCase().includes('grat') || pOn.toLowerCase().includes('grátis'); let colorClass = isFree ? 'text-green-600' : 'sys-text-accent';
                 tableRows += `<tr><td class="p-3 font-medium flex items-center gap-2"><i data-lucide="monitor-play" class="w-4 h-4"></i> Online</td><td class="p-3 font-black ${colorClass}">${pOn || '-'}</td></tr>`;
-                let bgClass = isFree ? 'bg-blue-700 hover:bg-blue-800' : 'sys-bg-accent hover:opacity-90'; let icn = isFree ? 'play' : 'shopping-cart'; let txt = c.btnOnline || (isFree ? 'Acessar Gratuitamente' : 'Comprar Acesso');
-                buttonsHtml += `<a href="${safeLOn}" target="_blank" class="w-full flex justify-center items-center gap-2 ${bgClass} text-white py-4 px-6 rounded-xl font-black text-sm uppercase tracking-wide shadow-xl transition-all hover:-translate-y-1 mb-3"><i data-lucide="${icn}" class="w-4 h-4"></i> ${txt}</a>`;
+                let bgClass = isFree ? 'bg-blue-700 hover:bg-blue-800' : 'sys-bg-accent hover:opacity-90'; let icn = isFree ? 'play' : 'shopping-cart'; let txt = c.btnOnline || (isFree ? 'Aceder Gratuitamente' : 'Comprar Acesso');
+                buttonsHtml += `<a href="${safeLOn}" target="_blank" class="w-full flex justify-center items-center gap-2 ${bgClass} text-white py-4 px-6 rounded-xl font-black text-sm uppercase tracking-wide shadow-xl transition-all hover:-translate-y-1 mb-3 cursor-pointer"><i data-lucide="${icn}" class="w-4 h-4"></i> ${txt}</a>`;
             }
-            if (safeSample) { buttonsHtml += `<a href="${safeSample}" target="_blank" class="w-full flex justify-center items-center gap-2 sys-bg-surface sys-text-primary border-2 sys-border py-4 px-6 rounded-xl font-bold text-sm uppercase tracking-wide hover:bg-gray-50 transition-all mb-3"><i data-lucide="video" class="w-4 h-4"></i> Ver Apresentação</a>`; }
+            if (safeSample) { buttonsHtml += `<a href="${safeSample}" target="_blank" class="w-full flex justify-center items-center gap-2 sys-bg-surface sys-text-primary border-2 sys-border py-4 px-6 rounded-xl font-bold text-sm uppercase tracking-wide hover:bg-gray-50 transition-all mb-3 cursor-pointer"><i data-lucide="video" class="w-4 h-4"></i> Ver Apresentação</a>`; }
 
             const tableHtml = tableRows ? `<div class="border sys-border rounded-xl overflow-hidden mb-6"><table class="w-full text-left text-sm"><thead class="sys-bg-body border-b sys-border"><tr><th class="p-3 font-bold text-gray-500 uppercase tracking-widest text-[10px]">Formato</th><th class="p-3 font-bold text-gray-500 uppercase tracking-widest text-[10px]">Valor</th></tr></thead><tbody>${tableRows}</tbody></table></div>` : '';
 
@@ -987,7 +1076,7 @@
                     <div class="w-full md:w-1/3 flex flex-col gap-6">
                         <div class="aspect-[2/3] w-[90%] mx-auto md:w-full rounded-2xl overflow-hidden shadow-2xl sys-border border"><img src="${window.getDriveImageUrl(c.cover)}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/400x600?text=Capa'"></div>
                         <div class="flex items-center justify-center gap-6 sys-bg-surface p-4 rounded-2xl sys-border border shadow-sm w-[90%] mx-auto md:w-full">
-                            <button onclick="window.likeCourse('${c.id}')" class="flex flex-col items-center gap-1 text-red-500 hover:scale-110 active:scale-95 transition-transform" title="Recomendar Curso"><i data-lucide="heart" class="w-6 h-6 fill-current"></i><span class="text-xs font-black">${likesCount}</span></button>
+                            <button onclick="window.likeCourse('${c.id}')" class="flex flex-col items-center gap-1 text-red-500 hover:scale-110 active:scale-95 transition-transform cursor-pointer" title="Recomendar Curso"><i data-lucide="heart" class="w-6 h-6 fill-current"></i><span class="text-xs font-black">${likesCount}</span></button>
                             <div class="w-px h-8 bg-gray-200"></div><div class="flex flex-col items-center gap-1 sys-text-secondary"><i data-lucide="message-square" class="w-6 h-6"></i><span class="text-xs font-black">${commentsList.length}</span></div>
                         </div>
                     </div>
@@ -1001,7 +1090,7 @@
                 </div>
                 <div class="border-t sys-border pt-10">
                     <h3 class="text-2xl font-black sys-text-primary mb-6 flex items-center gap-2"><i data-lucide="message-square" class="w-6 h-6 sys-text-accent"></i> Avaliações</h3>
-                    <div class="sys-bg-surface p-5 sm:p-6 rounded-2xl sys-border border shadow-sm mb-8"><div class="flex flex-col gap-3"><input type="text" id="course-comment-name-${c.id}" placeholder="Seu nome" class="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-900 bg-white text-gray-900 text-sm"><textarea id="course-comment-text-${c.id}" rows="3" placeholder="O que achou deste curso?" class="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-900 bg-white text-gray-900 resize-none text-sm"></textarea><button onclick="window.submitCourseComment('${c.id}')" class="self-end bg-purple-700 hover:bg-purple-800 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2">Enviar <i data-lucide="send" class="w-4 h-4"></i></button></div></div>
+                    <div class="sys-bg-surface p-5 sm:p-6 rounded-2xl sys-border border shadow-sm mb-8"><div class="flex flex-col gap-3"><input type="text" id="course-comment-name-${c.id}" placeholder="Seu nome" class="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-900 bg-white text-gray-900 text-sm"><textarea id="course-comment-text-${c.id}" rows="3" placeholder="O que achou deste curso?" class="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-900 bg-white text-gray-900 resize-none text-sm"></textarea><button onclick="window.submitCourseComment('${c.id}')" class="self-end bg-purple-700 hover:bg-purple-800 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 cursor-pointer">Enviar <i data-lucide="send" class="w-4 h-4"></i></button></div></div>
                     <div class="flex flex-col gap-4">${commentsList.length > 0 ? commentsList.map(cm => `<div class="flex gap-4 p-4 sys-bg-body rounded-2xl border sys-border"><div class="w-10 h-10 rounded-full sys-bg-surface flex items-center justify-center border sys-border shrink-0"><i data-lucide="user" class="w-5 h-5 sys-text-secondary"></i></div><div class="flex-1"><div class="flex items-center gap-2 mb-1"><p class="font-bold sys-text-primary text-sm">${cm.name.replace(/</g, "&lt;")}</p><span class="text-[10px] sys-text-secondary">${new Date(cm.date).toLocaleDateString('pt-BR')}</span></div><p class="sys-text-secondary text-sm leading-relaxed">${cm.text.replace(/</g, "&lt;")}</p></div></div>`).reverse().join('') : '<p class="text-center sys-text-secondary py-8 italic opacity-70">Nenhuma avaliação ainda.</p>'}</div>
                 </div>
             `;
@@ -1010,8 +1099,8 @@
 
         window.likeCourse = async (id) => {
             let likedCourses = JSON.parse(localStorage.getItem('plh_liked_courses') || '[]');
-            if (likedCourses.includes(id)) { window.showToast("Você já avaliou este curso!"); return; }
-            try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'courses', id), { likes: increment(1) }); likedCourses.push(id); localStorage.setItem('plh_liked_courses', JSON.stringify(likedCourses)); window.showToast("Avaliação registrada!"); } catch (e) { console.error(e); }
+            if (likedCourses.includes(id)) { window.showToast("Já avaliou este curso!"); return; }
+            try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'courses', id), { likes: increment(1) }); likedCourses.push(id); localStorage.setItem('plh_liked_courses', JSON.stringify(likedCourses)); window.showToast("Avaliação registada!"); } catch (e) { console.error(e); }
         };
 
         window.submitCourseComment = async (id) => {
@@ -1034,7 +1123,7 @@
             window.currentEditorId = 'book-fulltext'; document.getElementById('edit-book-id').value = ''; document.getElementById('book-has-physical').checked = false; document.getElementById('book-has-ebook').checked = true; window.toggleBookFormats();
             ['title', 'subtitle', 'pages', 'cover', 'price-physical', 'btn-physical', 'link-physical', 'price-ebook', 'btn-ebook', 'link-ebook', 'sample', 'likes'].forEach(f => { const el = document.getElementById('book-'+f); if(el) { if (f==='likes') el.value = '0'; else if (f==='btn-physical') el.value = 'Comprar Livro Físico'; else if (f==='btn-ebook') el.value = 'Comprar E-book'; else el.value = ''; } });
             document.getElementById('book-fulltext').innerHTML = ''; document.getElementById('book-moderation-section').classList.add('hidden'); document.getElementById('book-comments-moderation').innerHTML = '';
-            document.getElementById('book-editor-title').innerText = "Adicionar Livro / Isca"; document.getElementById('btn-delete-book').classList.add('hidden'); document.getElementById('book-editor-modal').classList.remove('hidden');
+            document.getElementById('book-editor-title').innerText = "Adicionar Livro / Material"; document.getElementById('btn-delete-book').classList.add('hidden'); document.getElementById('book-editor-modal').classList.remove('hidden');
         };
 
         window.closeBookEditor = () => document.getElementById('book-editor-modal').classList.add('hidden');
@@ -1057,11 +1146,11 @@
             document.getElementById('book-price-ebook').value = b.priceEbook || (legacyIsFree ? 'Gratuito' : ''); document.getElementById('book-btn-ebook').value = b.btnEbook || (legacyIsFree ? (b.btnText||'Baixar E-book') : 'Comprar E-book'); document.getElementById('book-link-ebook').value = b.linkEbook || (legacyIsFree ? b.link : '');
             document.getElementById('book-fulltext').innerHTML = b.fullText || b.desc || ''; 
             const modSec = document.getElementById('book-moderation-section'); const modCont = document.getElementById('book-comments-moderation');
-            if(b.comments && b.comments.length > 0) { modSec.classList.remove('hidden'); modCont.innerHTML = b.comments.map(c => `<div class="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-200 shadow-sm gap-3"><div class="truncate flex-1"><p class="text-xs font-black text-gray-800 mb-0.5">${c.name.replace(/</g, "&lt;")}</p><p class="text-xs text-gray-600 truncate">${c.text.replace(/</g, "&lt;")}</p></div><button type="button" onclick="window.deleteBookComment('${b.id}', ${c.date})" class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors shrink-0"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).reverse().join(''); } else { modSec.classList.add('hidden'); modCont.innerHTML = ''; }
+            if(b.comments && b.comments.length > 0) { modSec.classList.remove('hidden'); modCont.innerHTML = b.comments.map(c => `<div class="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-200 shadow-sm gap-3"><div class="truncate flex-1"><p class="text-xs font-black text-gray-800 mb-0.5">${c.name.replace(/</g, "&lt;")}</p><p class="text-xs text-gray-600 truncate">${c.text.replace(/</g, "&lt;")}</p></div><button type="button" onclick="window.deleteBookComment('${b.id}', ${c.date})" class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors shrink-0 cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).reverse().join(''); } else { modSec.classList.add('hidden'); modCont.innerHTML = ''; }
             document.getElementById('book-editor-title').innerText = "Editar Livro"; document.getElementById('btn-delete-book').classList.remove('hidden'); document.getElementById('book-editor-modal').classList.remove('hidden'); lucide.createIcons();
         };
 
-        window.deleteBook = async (id) => { if (confirm("Remover este livro?")) { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'books', id)); window.closeBookEditor(); } };
+        window.deleteBook = async (id) => { if (confirm("Remover este material?")) { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'books', id)); window.closeBookEditor(); } };
 
         window.deleteBookComment = async (bookId, commentDate) => {
             if(!confirm("Apagar este comentário?")) return; const b = window.siteBooks.find(x => x.id === bookId); if(!b) return;
@@ -1082,10 +1171,10 @@
                             <p class="text-xs text-blue-600 mt-0.5 font-bold uppercase tracking-wider">${badge}</p>
                         </div>
                         <div class="flex gap-2 shrink-0">
-                            <button class="p-2 bg-blue-50 text-blue-900 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button class="p-3 bg-blue-50 text-blue-900 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                         </div>
                     </div>`;
-            }).join('') || '<p class="col-span-full text-center text-gray-400 py-6">Nenhum livro.</p>';
+            }).join('') || '<p class="col-span-full text-center text-gray-400 py-6">Nenhuma publicação.</p>';
             lucide.createIcons();
         };
 
@@ -1098,7 +1187,7 @@
                 let isFree = hasEb && (pEb.toLowerCase().includes('grat') || pEb.toLowerCase().includes('grátis'));
                 let topBadge = isFree ? `<div class="absolute top-2 right-2 bg-blue-600 text-white text-[10px] sm:text-xs font-black px-2 py-1 rounded-lg shadow-md tracking-wide uppercase">GRATUITO</div>` : '';
                 return `
-                    <div onclick="window.openBookDetail('${b.id}')" class="flex flex-col group sys-bg-surface rounded-2xl shadow-sm sys-border border overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer">
+                    <div onclick="window.openBookDetail('${b.id}')" class="flex flex-col group sys-bg-surface rounded-2xl shadow-sm sys-border border overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer relative z-10">
                         <div class="aspect-[2/3] bg-gray-100 relative overflow-hidden border-b sys-border">
                             <img src="${window.getDriveImageUrl(b.cover)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onerror="this.src='https://via.placeholder.com/400x600?text=Capa'">
                             ${topBadge}
@@ -1129,15 +1218,15 @@
             let tableRows = ''; let buttonsHtml = '';
             if(hasPhys) {
                 tableRows += `<tr class="border-b sys-border"><td class="p-3 font-medium flex items-center gap-2"><i data-lucide="book" class="w-4 h-4"></i> Livro Físico</td><td class="p-3 font-black sys-text-accent">${pPhys || '-'}</td></tr>`;
-                let txt = b.btnPhysical || 'Comprar Físico'; buttonsHtml += `<a href="${safeLPhys}" target="_blank" class="w-full flex justify-center items-center gap-2 sys-bg-accent text-white py-4 px-6 rounded-xl font-black text-sm uppercase tracking-wide hover:opacity-90 shadow-xl transition-all hover:-translate-y-1 mb-3">${txt} <i data-lucide="shopping-cart" class="w-4 h-4"></i></a>`;
+                let txt = b.btnPhysical || 'Comprar Físico'; buttonsHtml += `<a href="${safeLPhys}" target="_blank" class="w-full flex justify-center items-center gap-2 sys-bg-accent text-white py-4 px-6 rounded-xl font-black text-sm uppercase tracking-wide hover:opacity-90 shadow-xl transition-all hover:-translate-y-1 mb-3 cursor-pointer">${txt} <i data-lucide="shopping-cart" class="w-4 h-4"></i></a>`;
             }
             if(hasEb) {
                 let isFree = pEb.toLowerCase().includes('grat') || pEb.toLowerCase().includes('grátis'); let colorClass = isFree ? 'text-green-600' : 'sys-text-accent';
                 tableRows += `<tr><td class="p-3 font-medium flex items-center gap-2"><i data-lucide="smartphone" class="w-4 h-4"></i> E-book</td><td class="p-3 font-black ${colorClass}">${pEb || '-'}</td></tr>`;
                 let bgClass = isFree ? 'bg-blue-700 hover:bg-blue-800' : 'sys-bg-accent hover:opacity-90'; let icn = isFree ? 'download' : 'shopping-cart'; let txt = b.btnEbook || (isFree ? 'Baixar E-book Grátis' : 'Comprar E-book');
-                buttonsHtml += `<a href="${safeLEb}" target="_blank" class="w-full flex justify-center items-center gap-2 ${bgClass} text-white py-4 px-6 rounded-xl font-black text-sm uppercase tracking-wide shadow-xl transition-all hover:-translate-y-1 mb-3"><i data-lucide="${icn}" class="w-4 h-4"></i> ${txt}</a>`;
+                buttonsHtml += `<a href="${safeLEb}" target="_blank" class="w-full flex justify-center items-center gap-2 ${bgClass} text-white py-4 px-6 rounded-xl font-black text-sm uppercase tracking-wide shadow-xl transition-all hover:-translate-y-1 mb-3 cursor-pointer"><i data-lucide="${icn}" class="w-4 h-4"></i> ${txt}</a>`;
             }
-            if (safeSample && !pEb.toLowerCase().includes('grat')) { buttonsHtml += `<a href="${safeSample}" target="_blank" class="w-full flex justify-center items-center gap-2 sys-bg-surface sys-text-primary border-2 sys-border py-4 px-6 rounded-xl font-bold text-sm uppercase tracking-wide hover:bg-gray-50 transition-all mb-3"><i data-lucide="file-text" class="w-4 h-4"></i> Ler Amostra Grátis</a>`; }
+            if (safeSample && !pEb.toLowerCase().includes('grat')) { buttonsHtml += `<a href="${safeSample}" target="_blank" class="w-full flex justify-center items-center gap-2 sys-bg-surface sys-text-primary border-2 sys-border py-4 px-6 rounded-xl font-bold text-sm uppercase tracking-wide hover:bg-gray-50 transition-all mb-3 cursor-pointer"><i data-lucide="file-text" class="w-4 h-4"></i> Ler Amostra Grátis</a>`; }
 
             const tableHtml = tableRows ? `<div class="border sys-border rounded-xl overflow-hidden mb-6"><table class="w-full text-left text-sm"><thead class="sys-bg-body border-b sys-border"><tr><th class="p-3 font-bold text-gray-500 uppercase tracking-widest text-[10px]">Formato</th><th class="p-3 font-bold text-gray-500 uppercase tracking-widest text-[10px]">Valor</th></tr></thead><tbody>${tableRows}</tbody></table></div>` : '';
 
@@ -1146,7 +1235,7 @@
                     <div class="w-full md:w-1/3 flex flex-col gap-6">
                         <div class="aspect-[2/3] w-[90%] mx-auto md:w-full rounded-2xl overflow-hidden shadow-2xl sys-border border"><img src="${window.getDriveImageUrl(b.cover)}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/400x600?text=Capa'"></div>
                         <div class="flex items-center justify-center gap-6 sys-bg-surface p-4 rounded-2xl sys-border border shadow-sm w-[90%] mx-auto md:w-full">
-                            <button onclick="window.likeBook('${b.id}')" class="flex flex-col items-center gap-1 text-red-500 hover:scale-110 active:scale-95 transition-transform" title="Curtir Obra"><i data-lucide="heart" class="w-6 h-6 fill-current"></i><span class="text-xs font-black">${likesCount}</span></button>
+                            <button onclick="window.likeBook('${b.id}')" class="flex flex-col items-center gap-1 text-red-500 hover:scale-110 active:scale-95 transition-transform cursor-pointer" title="Curtir Obra"><i data-lucide="heart" class="w-6 h-6 fill-current"></i><span class="text-xs font-black">${likesCount}</span></button>
                             <div class="w-px h-8 bg-gray-200"></div><div class="flex flex-col items-center gap-1 sys-text-secondary"><i data-lucide="message-square" class="w-6 h-6"></i><span class="text-xs font-black">${commentsList.length}</span></div>
                         </div>
                     </div>
@@ -1160,7 +1249,7 @@
                 </div>
                 <div class="border-t sys-border pt-10">
                     <h3 class="text-2xl font-black sys-text-primary mb-6 flex items-center gap-2"><i data-lucide="message-square" class="w-6 h-6 sys-text-accent"></i> Comentários</h3>
-                    <div class="sys-bg-surface p-5 sm:p-6 rounded-2xl sys-border border shadow-sm mb-8"><div class="flex flex-col gap-3"><input type="text" id="comment-name-${b.id}" placeholder="Seu nome" class="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-900 bg-white text-gray-900 text-sm"><textarea id="comment-text-${b.id}" rows="3" placeholder="O que você achou desta obra?" class="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-900 bg-white text-gray-900 resize-none text-sm"></textarea><button onclick="window.submitBookComment('${b.id}')" class="self-end bg-blue-900 hover:bg-blue-950 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2">Enviar <i data-lucide="send" class="w-4 h-4"></i></button></div></div>
+                    <div class="sys-bg-surface p-5 sm:p-6 rounded-2xl sys-border border shadow-sm mb-8"><div class="flex flex-col gap-3"><input type="text" id="comment-name-${b.id}" placeholder="Seu nome" class="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-900 bg-white text-gray-900 text-sm"><textarea id="comment-text-${b.id}" rows="3" placeholder="O que você achou desta obra?" class="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-900 bg-white text-gray-900 resize-none text-sm"></textarea><button onclick="window.submitBookComment('${b.id}')" class="self-end bg-blue-900 hover:bg-blue-950 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 cursor-pointer">Enviar <i data-lucide="send" class="w-4 h-4"></i></button></div></div>
                     <div class="flex flex-col gap-4">${commentsList.length > 0 ? commentsList.map(c => `<div class="flex gap-4 p-4 sys-bg-body rounded-2xl border sys-border"><div class="w-10 h-10 rounded-full sys-bg-surface flex items-center justify-center border sys-border shrink-0"><i data-lucide="user" class="w-5 h-5 sys-text-secondary"></i></div><div class="flex-1"><div class="flex items-center gap-2 mb-1"><p class="font-bold sys-text-primary text-sm">${c.name.replace(/</g, "&lt;")}</p><span class="text-[10px] sys-text-secondary">${new Date(c.date).toLocaleDateString('pt-BR')}</span></div><p class="sys-text-secondary text-sm leading-relaxed">${c.text.replace(/</g, "&lt;")}</p></div></div>`).reverse().join('') : '<p class="text-center sys-text-secondary py-8 italic opacity-70">Seja o primeiro a comentar.</p>'}</div>
                 </div>
             `;
@@ -1169,8 +1258,8 @@
 
         window.likeBook = async (id) => {
             let likedBooks = JSON.parse(localStorage.getItem('plh_liked_books') || '[]');
-            if (likedBooks.includes(id)) { window.showToast("Você já curtiu esta obra!"); return; }
-            try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'books', id), { likes: increment(1) }); likedBooks.push(id); localStorage.setItem('plh_liked_books', JSON.stringify(likedBooks)); window.showToast("Curtida registrada!"); } catch (e) { console.error(e); }
+            if (likedBooks.includes(id)) { window.showToast("Já gostou desta obra!"); return; }
+            try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'books', id), { likes: increment(1) }); likedBooks.push(id); localStorage.setItem('plh_liked_books', JSON.stringify(likedBooks)); window.showToast("Gosto registado!"); } catch (e) { console.error(e); }
         };
 
         window.submitBookComment = async (id) => {
@@ -1185,10 +1274,10 @@
         window.switchAdminTab = (tab) => {
             ['posts', 'books', 'categories', 'community', 'bio', 'courses', 'config'].forEach(t => {
                 document.getElementById('admin-view-'+t).classList.add('hidden');
-                document.getElementById('tab-btn-'+t).className = "pb-3 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-gray-600 transition-colors focus:outline-none whitespace-nowrap";
+                document.getElementById('tab-btn-'+t).className = "pb-3 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-gray-600 transition-colors focus:outline-none whitespace-nowrap cursor-pointer";
             });
             document.getElementById('admin-view-'+tab).classList.remove('hidden');
-            document.getElementById('tab-btn-'+tab).className = "pb-3 text-sm font-black text-blue-900 border-b-2 border-blue-900 transition-colors focus:outline-none whitespace-nowrap";
+            document.getElementById('tab-btn-'+tab).className = "pb-3 text-sm font-black text-blue-900 border-b-2 border-blue-900 transition-colors focus:outline-none whitespace-nowrap cursor-pointer";
             if(tab === 'posts') window.renderAdminList();
             if(tab === 'courses') window.renderAdminCourses();
             if(tab === 'books') window.renderAdminBooks();
@@ -1199,42 +1288,59 @@
         };
         
         window.renderAdminConfig = () => {
-            document.getElementById('config-home-title').value = window.siteConfig?.homeTitle || "Desenvolvimento e Capacitação.";
-            document.getElementById('config-home-subtitle').value = window.siteConfig?.homeSubtitle || "De Adolescentes e jovens - 9 a 17 anos.";
+            document.getElementById('config-app-name').value = window.siteConfig?.appName || "A Minha App";
+            document.getElementById('config-app-logo').value = window.siteConfig?.appLogo || "";
+            document.getElementById('config-default-theme').value = window.siteConfig?.defaultTheme || "light";
+            document.getElementById('config-default-font').value = window.siteConfig?.defaultFontSize || "normal";
+
+            document.getElementById('config-home-title').value = window.siteConfig?.homeTitle || "A Minha Plataforma";
+            document.getElementById('config-home-subtitle').value = window.siteConfig?.homeSubtitle || "O seu espaço de aprendizagem.";
             
             document.getElementById('config-crs-title').value = window.siteConfig?.crsTitle || "Cursos e Eventos";
-            document.getElementById('config-crs-subtitle').value = window.siteConfig?.crsSubtitle || "Cursos online, mentorias e eventos focados em alta performance.";
+            document.getElementById('config-crs-subtitle').value = window.siteConfig?.crsSubtitle || "Cursos online, mentorias e eventos presenciais.";
             
             document.getElementById('config-lib-title').value = window.siteConfig?.libTitle || "Biblioteca";
-            document.getElementById('config-lib-subtitle').value = window.siteConfig?.libSubtitle || "Livros, e-books e materiais para o desenvolvimento da autonomia e rotina de estudos.";
+            document.getElementById('config-lib-subtitle').value = window.siteConfig?.libSubtitle || "Material para estudo e aprofundamento.";
 
-            document.getElementById('config-app-text').value = window.siteConfig?.appShareText || `📚 Conheça o App de Desenvolvimento Sistemático e Rotina de Estudos!\nMétodo, rotina e alta performance para jovens e famílias.`;
-            document.getElementById('config-community-url').value = window.siteConfig?.communityShareUrl || "https://chat.whatsapp.com/Gz85l2zmg3p20XsOqgzB0h";
-            document.getElementById('config-community-text').value = window.siteConfig?.communityShareText || `🟢 Faça parte da Comunidade de Desenvolvimento Sistemático no WhatsApp!\nUm ambiente para pais e famílias focados em desenvolver a autonomia e o método de estudo dos filhos.`;
+            document.getElementById('config-community-title').value = window.siteConfig?.communityTitle || "A Nossa Comunidade";
+            document.getElementById('config-community-subtitle').value = window.siteConfig?.communitySubtitle || "Um espaço focado no desenvolvimento em rede.";
+
+            document.getElementById('config-app-text').value = window.siteConfig?.appShareText || `📚 Conheça a nossa App!\nAceda a conteúdos exclusivos.`;
+            document.getElementById('config-community-url').value = window.siteConfig?.communityShareUrl || "https://chat.whatsapp.com/";
+            document.getElementById('config-community-text').value = window.siteConfig?.communityShareText || `🟢 Faça parte da nossa Comunidade no WhatsApp!\nReceba avisos em primeira mão.`;
         };
 
         window.saveConfig = async () => {
             try {
-                window.showToast("Salvando...");
+                window.showToast("A Guardar...");
                 const data = {
+                    appName: document.getElementById('config-app-name').value,
+                    appLogo: document.getElementById('config-app-logo').value,
+                    defaultTheme: document.getElementById('config-default-theme').value,
+                    defaultFontSize: document.getElementById('config-default-font').value,
+
                     homeTitle: document.getElementById('config-home-title').value,
                     homeSubtitle: document.getElementById('config-home-subtitle').value,
                     crsTitle: document.getElementById('config-crs-title').value,
                     crsSubtitle: document.getElementById('config-crs-subtitle').value,
                     libTitle: document.getElementById('config-lib-title').value,
                     libSubtitle: document.getElementById('config-lib-subtitle').value,
+                    
+                    communityTitle: document.getElementById('config-community-title').value,
+                    communitySubtitle: document.getElementById('config-community-subtitle').value,
+
                     appShareText: document.getElementById('config-app-text').value,
                     communityShareUrl: document.getElementById('config-community-url').value,
                     communityShareText: document.getElementById('config-community-text').value
                 };
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), data);
-                window.showToast("Ajustes salvos com sucesso!");
+                window.showToast("Ajustes guardados com sucesso!");
             } catch(e) { alert("Erro: " + e.message); }
         };
 
         window.saveBio = async () => {
-            try { window.showToast("Salvando biografia..."); await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'bio'), { fullText: document.getElementById('bio-fulltext').innerHTML }); window.showToast("Biografia salva com sucesso!"); } 
-            catch(e) { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'settings'), { id: 'bio', fullText: document.getElementById('bio-fulltext').innerHTML }); window.showToast("Biografia criada com sucesso!"); }
+            try { window.showToast("A Guardar biografia..."); await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'bio'), { fullText: document.getElementById('bio-fulltext').innerHTML }); window.showToast("Biografia guardada com sucesso!"); } 
+            catch(e) { alert("Erro: " + e.message); }
         }
 
         window.savePost = async () => {
@@ -1244,22 +1350,23 @@
         };
 
         window.deletePost = async (id, fromEditor = false) => { if (confirm("Excluir conteúdo?")) { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'posts', id)); if (fromEditor) window.closeEditor(); } };
-        window.sharePost = async (id, title, subtitle, event) => { if(event) event.stopPropagation(); const safeTitle = (title || "Conteúdo").replace(/["]/g, ""); const url = window.location.origin + window.location.pathname + '?post=' + id; const text = `🎯 *Desenvolvimento Sistemático - PLH*\n\n*${safeTitle}*\n${subtitle ? `_${subtitle}_` : ""}\n\nLeia aqui:\n${url}`; if (navigator.share) { try { await navigator.share({ title: safeTitle, text }); } catch(e) { window.copyToClipboardText(url); } } else { window.copyToClipboardText(url); } };
+        window.sharePost = async (id, title, subtitle, event) => { if(event) event.stopPropagation(); const safeTitle = (title || "Conteúdo").replace(/["]/g, ""); const url = window.location.origin + window.location.pathname + '?post=' + id; const text = `🎯 *${window.siteConfig?.appName || "A Minha App"}*\n\n*${safeTitle}*\n${subtitle ? `_${subtitle}_` : ""}\n\nLeia aqui:\n${url}`; if (navigator.share) { try { await navigator.share({ title: safeTitle, text }); } catch(e) { window.copyToClipboardText(url); } } else { window.copyToClipboardText(url); } };
         
         /* Novas Funções de Partilha GERAIS */
         window.shareApp = async () => {
             const url = window.location.origin + window.location.pathname;
-            const customText = window.siteConfig?.appShareText || `📚 Conheça o App de Desenvolvimento Sistemático e Rotina de Estudos!\nMétodo, rotina e alta performance para jovens e famílias.`;
-            const text = `${customText}\nAcesse: ${url}`;
-            if (navigator.share) { try { await navigator.share({ title: "App PLH", text }); } catch(e) { window.copyToClipboardText(text); } } else { window.copyToClipboardText(text); }
+            const titleStr = window.siteConfig?.appName || "App PWA";
+            const customText = window.siteConfig?.appShareText || `📚 Conheça a nossa App!\nAceda a conteúdos exclusivos.`;
+            const text = `${customText}\n\nAceda aqui: ${url}`;
+            if (navigator.share) { try { await navigator.share({ title: titleStr, text }); } catch(e) { window.copyToClipboardText(text); } } else { window.copyToClipboardText(text); }
         };
         window.shareCommunityLink = async () => {
-            const url = window.siteConfig?.communityShareUrl || "https://chat.whatsapp.com/Gz85l2zmg3p20XsOqgzB0h";
-            const customText = window.siteConfig?.communityShareText || `🟢 Faça parte da Comunidade de Desenvolvimento Sistemático no WhatsApp!\nUm ambiente para pais e famílias focados em desenvolver a autonomia e o método de estudo dos filhos.`;
-            const text = `${customText}\nEntre por aqui: ${url}`;
-            if (navigator.share) { try { await navigator.share({ title: "Comunidade PLH", text }); } catch(e) { window.copyToClipboardText(text); } } else { window.copyToClipboardText(text); }
+            const url = window.siteConfig?.communityShareUrl || "https://chat.whatsapp.com/";
+            const customText = window.siteConfig?.communityShareText || `🟢 Faça parte da nossa Comunidade no WhatsApp!\nReceba avisos em primeira mão.`;
+            const text = `${customText}\n\nEntre por aqui: ${url}`;
+            if (navigator.share) { try { await navigator.share({ title: "Comunidade da App", text }); } catch(e) { window.copyToClipboardText(text); } } else { window.copyToClipboardText(text); }
         };
-        window.copyToClipboardText = (text) => { const el = document.createElement('textarea'); el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); window.showToast("Copiado para enviar!"); };
+        window.copyToClipboardText = (text) => { const el = document.createElement('textarea'); el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); window.showToast("Copiado para partilhar!"); };
 
         window.getDriveImageUrl = (url) => { if (!url) return ""; const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/); return match ? `https://lh3.googleusercontent.com/d/${match[1]}` : url; };
         window.getYoutubeId = (url) => { const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/); return (match && match[2].length === 11) ? match[2] : null; };
@@ -1267,11 +1374,11 @@
         window.renderPostsFeed = () => {
             const header = document.getElementById('feed-header'); 
             const container = document.getElementById('feed-container'); 
-            const hTitle = window.siteConfig?.homeTitle || "Desenvolvimento e Capacitação.";
-            const hSub = window.siteConfig?.homeSubtitle || "De Adolescentes e jovens - 9 a 17 anos.";
+            const hTitle = window.siteConfig?.homeTitle || "A Minha Plataforma";
+            const hSub = window.siteConfig?.homeSubtitle || "O seu espaço de aprendizagem.";
             
             if (window.currentCategoryFilter) {
-                header.innerHTML = `<div class="flex items-center gap-3"><button onclick="window.clearFilter()" class="p-2 sys-bg-surface sys-border border rounded-full hover:opacity-80"><i data-lucide="arrow-left" class="w-4 h-4 sys-text-secondary"></i></button><h2 class="text-3xl font-black sys-text-primary">Pasta: ${window.currentCategoryFilter}</h2></div>`;
+                header.innerHTML = `<div class="flex items-center gap-3"><button onclick="window.clearFilter()" class="p-3 sys-bg-surface sys-border border rounded-full hover:opacity-80 transition-colors cursor-pointer"><i data-lucide="arrow-left" class="w-5 h-5 sys-text-secondary"></i></button><h2 class="text-3xl font-black sys-text-primary">Pasta: ${window.currentCategoryFilter}</h2></div>`;
             } else {
                 header.innerHTML = `<h2 class="text-3xl font-black sys-text-primary mb-1">${hTitle}</h2><p class="sys-text-secondary font-medium">${hSub}</p>`;
             }
@@ -1283,18 +1390,18 @@
             }
             
             if (posts.length === 0) { 
-                container.innerHTML = `<p class="text-center py-20 sys-text-secondary opacity-70">Nenhum estudo aqui.</p>`; 
+                container.innerHTML = `<p class="text-center py-20 sys-text-secondary opacity-70">Nenhum conteúdo publicado.</p>`; 
                 lucide.createIcons(); 
                 return; 
             }
 
             posts.forEach(post => {
                 const article = document.createElement('article'); 
-                article.className = 'sys-bg-surface rounded-2xl shadow-sm sys-border border overflow-hidden hover:shadow-xl transition-all duration-500 group cursor-pointer';
+                article.className = 'sys-bg-surface rounded-2xl shadow-sm sys-border border overflow-hidden hover:shadow-xl transition-all duration-500 group cursor-pointer relative z-10';
                 const ytId = window.getYoutubeId(post.youtubeUrl);
                 
                 const mediaHtml = ytId 
-                    ? `<div class="aspect-video bg-black relative overflow-hidden group"><iframe class="absolute inset-0 w-full h-full pointer-events-none transform scale-[1.35]" src="https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&loop=1&playlist=${ytId}&playsinline=1" frameborder="0" allow="autoplay; encrypted-media"></iframe><div class="absolute inset-0 z-10 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors cursor-pointer"><div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 group-hover:bg-white/30 transition-all shadow-2xl group-hover:scale-110"><svg class="w-7 h-7 text-white ml-1 shadow-sm" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div></div>` 
+                    ? `<div class="aspect-video bg-black relative overflow-hidden group"><iframe class="absolute inset-0 w-full h-full pointer-events-none transform scale-[1.35]" src="https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&loop=1&playlist=${ytId}&playsinline=1" frameborder="0" allow="autoplay; encrypted-media"></iframe><div class="absolute inset-0 z-20 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors cursor-pointer"><div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 group-hover:bg-white/30 transition-all shadow-2xl group-hover:scale-110"><svg class="w-7 h-7 text-white ml-1 shadow-sm" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div></div>` 
                     : `<div class="aspect-video bg-gray-100 overflow-hidden"><img src="${window.getDriveImageUrl(post.imageUrl)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"></div>`;
                 
                 const isPage = post.type === 'page'; 
@@ -1313,11 +1420,11 @@
                             <p class="sys-text-secondary text-sm line-clamp-2">${post.subtitle}</p>
                             <div class="flex items-center justify-between pt-4 mt-4 sys-border border-t">
                                 <div id="indicator-${post.id}" class="sys-text-accent font-black text-xs uppercase flex items-center gap-1">Ler mais <i data-lucide="chevron-right" class="w-3 h-3"></i></div>
-                                <button onclick="window.sharePost('${post.id}', '${safeTitle}', '${safeSubtitle}', event)" class="p-2 sys-text-secondary hover:text-green-600 transition-all"><i data-lucide="share-2" class="w-5 h-5"></i></button>
+                                <button onclick="window.sharePost('${post.id}', '${safeTitle}', '${safeSubtitle}', event)" class="p-3 -m-2 sys-text-secondary hover:text-green-600 transition-all cursor-pointer"><i data-lucide="share-2" class="w-5 h-5"></i></button>
                             </div>
                         </div>
                     </div>
-                    ${!isPage ? `<div id="content-${post.id}" class="faq-content sys-bg-body sys-border border-t"><div class="faq-content-inner p-8 prose max-w-none sys-text-primary">${post.fullText}</div></div>` : ''}
+                    ${!isPage ? `<div id="content-${post.id}" class="faq-content sys-bg-body sys-border border-t"><div class="faq-content-inner p-8 prose max-w-none sys-text-primary cursor-auto" onclick="event.stopPropagation();">${post.fullText}</div></div>` : ''}
                 `;
                 container.appendChild(article);
             });
@@ -1339,7 +1446,7 @@
             const ytId = window.getYoutubeId(p.youtubeUrl); 
             const mediaHtml = ytId ? `<div class="aspect-video rounded-3xl overflow-hidden mb-8 shadow-2xl bg-black"><iframe class="w-full h-full" src="https://www.youtube.com/embed/${ytId}" frameborder="0" allowfullscreen></iframe></div>` : `<div class="aspect-video rounded-3xl overflow-hidden mb-8 shadow-xl"><img src="${window.getDriveImageUrl(p.imageUrl)}" class="w-full h-full object-cover"></div>`; 
             const safeTitle = (p.title || "").replace(/'/g, "\\'"); const safeSubtitle = (p.subtitle || "").replace(/'/g, "\\'");
-            document.getElementById('article-content').innerHTML = `${mediaHtml}<div class="px-2"><h1 class="text-4xl sm:text-6xl font-black mb-6 leading-tight tracking-tight sys-text-primary">${p.title}</h1><p class="text-xl sm:text-2xl opacity-80 mb-10 pb-10 sys-border border-b font-medium italic sys-text-secondary">${p.subtitle}</p><div class="prose max-w-none leading-relaxed">${p.fullText}</div><div class="mt-16 pt-12 sys-border border-t flex justify-center"><button onclick="window.sharePost('${p.id}', '${safeTitle}', '${safeSubtitle}', event)" class="flex items-center gap-3 bg-green-600 hover:bg-green-700 text-white sm:px-10 px-6 sm:py-5 py-3 rounded-full font-black shadow-2xl transition-all hover:scale-105 active:scale-95 uppercase text-sm sm:text-base"><i data-lucide="share-2" class="w-5 h-5 sm:w-6 sm:h-6"></i> Compartilhar Estudo</button></div></div>`; 
+            document.getElementById('article-content').innerHTML = `${mediaHtml}<div class="px-2"><h1 class="text-4xl sm:text-6xl font-black mb-6 leading-tight tracking-tight sys-text-primary">${p.title}</h1><p class="text-xl sm:text-2xl opacity-80 mb-10 pb-10 sys-border border-b font-medium italic sys-text-secondary">${p.subtitle}</p><div class="prose max-w-none leading-relaxed">${p.fullText}</div><div class="mt-16 pt-12 sys-border border-t flex justify-center"><button onclick="window.sharePost('${p.id}', '${safeTitle}', '${safeSubtitle}', event)" class="flex items-center gap-3 bg-green-600 hover:bg-green-700 text-white sm:px-10 px-6 sm:py-5 py-3 rounded-full font-black shadow-2xl transition-all hover:scale-105 active:scale-95 uppercase text-sm sm:text-base cursor-pointer"><i data-lucide="share-2" class="w-5 h-5 sm:w-6 sm:h-6"></i> Partilhar Estudo</button></div></div>`; 
             lucide.createIcons(); 
         };
 
@@ -1357,11 +1464,11 @@
                         <span class="font-bold text-gray-800 truncate">${p.title}</span>
                     </div>
                     <div class="flex gap-2 shrink-0">
-                        <button onclick="window.editPost('${p.id}')" class="p-2 bg-blue-50 text-blue-900 rounded-lg hover:bg-blue-100 transition-colors"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                        <button onclick="window.deletePost('${p.id}')" class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <button onclick="window.editPost('${p.id}')" class="p-3 bg-blue-50 text-blue-900 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        <button onclick="window.deletePost('${p.id}')" class="p-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
                 </div>`
-            ).join('') || '<p class="text-center text-gray-400 py-6">Nenhum estudo.</p>';
+            ).join('') || '<p class="text-center text-gray-400 py-6">Nenhum conteúdo publicado.</p>';
             lucide.createIcons();
         };
 
