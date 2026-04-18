@@ -152,9 +152,6 @@
         html.font-size-large { font-size: 18px; }
         html.font-size-xlarge { font-size: 20px; }
 
-        /* Proteção Anti-Bug para Ícones (Evita bloqueio de cliques nos botões) */
-        .lucide { pointer-events: none; }
-
         .faq-content { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.4s ease-out; }
         .faq-content.open { grid-template-rows: 1fr; }
         .faq-content-inner { overflow: hidden; }
@@ -173,35 +170,35 @@
     <header class="sys-bg-surface shadow-sm sticky top-0 z-20 flex-shrink-0 sys-border border-b">
         <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center gap-2 sm:gap-4">
-                <button onclick="window.toggleMobileMenu()" class="p-2 -ml-2 sys-text-secondary hover:sys-text-accent focus:outline-none rounded-lg transition-colors lg:hidden cursor-pointer" title="Abrir Menu">
+                <button onclick="window.toggleMobileMenu()" class="p-2 -ml-2 sys-text-secondary hover:sys-text-accent focus:outline-none rounded-lg transition-colors lg:hidden" title="Abrir Menu">
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
-                <a href="#" onclick="window.clearFilter(); window.showHome(); return false;" class="text-xl sm:text-2xl font-black tracking-tight sys-text-accent flex items-center gap-3 truncate hover:opacity-80 transition-opacity cursor-pointer">
+                <a href="#" onclick="window.clearFilter(); window.showHome(); return false;" class="text-xl sm:text-2xl font-black tracking-tight sys-text-accent flex items-center gap-3 truncate hover:opacity-80 transition-opacity">
                     <img id="header-app-logo" src="./foto-compartilhamento.png" onerror="this.src='https://via.placeholder.com/64?text=Logo'" alt="Logo" class="w-9 h-9 rounded-full object-cover border-2 sys-border shrink-0 shadow-sm">
                     <span id="header-app-name" class="truncate">A Minha App</span>
                 </a>
             </div>
             
             <div class="flex items-center gap-2 sm:gap-3">
-                <button id="install-btn" onclick="window.installApp()" class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-900 text-white text-sm font-bold rounded-lg hover:bg-blue-800 transition-colors shadow-sm cursor-pointer">
+                <button id="install-btn" onclick="window.installApp()" class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-900 text-white text-sm font-bold rounded-lg hover:bg-blue-800 transition-colors shadow-sm">
                     <i data-lucide="download" class="w-4 h-4"></i> Instalar
                 </button>
-                <button onclick="window.cycleFontSize()" class="p-2 sys-text-secondary hover:sys-text-accent rounded-lg transition-colors cursor-pointer" title="Tamanho da Letra">
+                <button onclick="window.cycleFontSize()" class="p-2 sys-text-secondary hover:sys-text-accent rounded-lg transition-colors" title="Tamanho da Letra">
                     <i data-lucide="type" class="w-5 h-5"></i>
                 </button>
                 <div class="relative">
-                    <button onclick="window.toggleThemeMenu(event)" class="p-2 sys-text-secondary hover:sys-text-accent rounded-lg transition-colors cursor-pointer" title="Temas">
+                    <button onclick="window.toggleThemeMenu(event)" class="p-2 sys-text-secondary hover:sys-text-accent rounded-lg transition-colors" title="Temas">
                         <i data-lucide="palette" class="w-5 h-5"></i>
                     </button>
                     <div id="theme-menu" class="hidden absolute right-0 mt-2 w-48 sys-bg-surface sys-border border rounded-xl shadow-2xl py-2 z-50">
                         <p class="px-4 py-2 text-xs font-bold uppercase tracking-wider sys-text-secondary border-b sys-border mb-2">Temas</p>
-                        <button onclick="window.setSiteTheme('light', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3 cursor-pointer">Claro</button>
-                        <button onclick="window.setSiteTheme('dark', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3 cursor-pointer">Escuro</button>
-                        <button onclick="window.setSiteTheme('polen', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3 cursor-pointer">Pólen</button>
-                        <button onclick="window.setSiteTheme('cafe', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3 cursor-pointer">Café</button>
-                        <button onclick="window.setSiteTheme('verde', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3 cursor-pointer">Verde</button>
-                        <button onclick="window.setSiteTheme('azul', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3 cursor-pointer">Azul</button>
-                        <button onclick="window.setSiteTheme('vermelho', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3 cursor-pointer">Vermelho</button>
+                        <button onclick="window.setSiteTheme('light', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Claro</button>
+                        <button onclick="window.setSiteTheme('dark', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Escuro</button>
+                        <button onclick="window.setSiteTheme('polen', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Pólen</button>
+                        <button onclick="window.setSiteTheme('cafe', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Café</button>
+                        <button onclick="window.setSiteTheme('verde', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Verde</button>
+                        <button onclick="window.setSiteTheme('azul', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Azul</button>
+                        <button onclick="window.setSiteTheme('vermelho', true)" class="w-full text-left px-4 py-3 text-sm sys-text-primary hover:opacity-70 flex items-center gap-3">Vermelho</button>
                     </div>
                 </div>
             </div>
@@ -215,7 +212,7 @@
     <aside id="sidebar-menu" class="fixed top-0 left-0 h-full w-[280px] sys-bg-surface shadow-2xl lg:shadow-[4px_0_24px_rgba(0,0,0,0.04)] z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col border-r sys-border">
         <div class="p-6 flex justify-between items-center sys-border border-b bg-gray-50/5 sys-bg-body">
             <span class="font-black text-xl sys-text-primary flex items-center gap-2"><i data-lucide="compass" class="w-6 h-6 sys-text-accent"></i> Menu</span>
-            <button onclick="window.toggleMobileMenu()" class="p-2 rounded-full sys-bg-surface sys-border border transition-colors lg:hidden cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <button onclick="window.toggleMobileMenu()" class="p-2 rounded-full sys-bg-surface sys-border border transition-colors lg:hidden"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
         <div class="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-6">
             <a href="#" onclick="window.clearFilter(); window.showHome(); window.toggleMobileMenu(); return false;" class="flex items-center gap-4 font-bold text-lg sys-text-primary hover:sys-text-accent transition-colors"><i data-lucide="home" class="w-5 h-5"></i> Início</a>
@@ -224,7 +221,7 @@
             
             <div class="flex flex-col gap-2 mt-2">
                 <p class="text-[10px] font-black uppercase tracking-widest sys-text-secondary mb-2 pl-1">Explorar</p>
-                <button onclick="window.toggleCategories(event)" class="flex items-center justify-between w-full text-left sys-text-primary hover:sys-text-accent font-bold text-lg transition-colors py-1 cursor-pointer">
+                <button onclick="window.toggleCategories(event)" class="flex items-center justify-between w-full text-left sys-text-primary hover:sys-text-accent font-bold text-lg transition-colors py-1">
                     <span class="flex items-center gap-4"><i data-lucide="folder" class="w-5 h-5"></i> Pastas</span>
                     <i data-lucide="chevron-down" id="cat-chevron" class="w-4 h-4 transition-transform duration-300"></i>
                 </button>
@@ -249,7 +246,7 @@
                 <button onclick="window.shareApp()" class="flex items-center gap-4 font-bold text-sm sys-text-primary hover:sys-text-accent transition-colors py-1 cursor-pointer">
                     <div class="p-2 sys-bg-body rounded-lg sys-border border"><i data-lucide="share-2" class="w-4 h-4"></i></div> Indicar a App
                 </button>
-                <button onclick="window.shareCommunityLink()" class="flex items-center gap-4 font-bold text-sm sys-text-primary hover:text-green-600 transition-colors py-1 cursor-pointer">
+                <button onclick="window.shareCommunityLink()" class="flex items-center gap-4 font-bold text-sm sys-text-primary hover:text-green-600 transition-colors py-1">
                     <div class="p-2 sys-bg-body rounded-lg sys-border border"><i data-lucide="message-circle" class="w-4 h-4 text-green-600"></i></div> Indicar Comunidade
                 </button>
             </div>
@@ -915,7 +912,7 @@
         window.openGroupEditor = () => {
             document.getElementById('edit-group-id').value = '';
             document.getElementById('group-name').value = '';
-            document.getElementById('group-link').value = window.siteConfig?.communityShareUrl || 'https://chat.whatsapp.com/Gz85l2zmg3p20XsOqgzB0h';
+            document.getElementById('group-link').value = window.siteConfig?.communityShareUrl || 'https://chat.whatsapp.com/';
             document.getElementById('group-status-open').checked = true;
             document.getElementById('group-editor-title').innerText = "Novo Grupo";
             document.getElementById('btn-delete-group').classList.add('hidden');
@@ -1306,8 +1303,8 @@
             document.getElementById('config-default-theme').value = window.siteConfig?.defaultTheme || "light";
             document.getElementById('config-default-font').value = window.siteConfig?.defaultFontSize || "normal";
 
-            document.getElementById('config-home-title').value = window.siteConfig?.homeTitle || "Desenvolvimento e Capacitação.";
-            document.getElementById('config-home-subtitle').value = window.siteConfig?.homeSubtitle || "De Adolescentes e jovens - 9 a 17 anos.";
+            document.getElementById('config-home-title').value = window.siteConfig?.homeTitle || "A Minha Plataforma";
+            document.getElementById('config-home-subtitle').value = window.siteConfig?.homeSubtitle || "O seu espaço de aprendizagem.";
             
             document.getElementById('config-crs-title').value = window.siteConfig?.crsTitle || "Cursos e Eventos";
             document.getElementById('config-crs-subtitle').value = window.siteConfig?.crsSubtitle || "Cursos online, mentorias e eventos presenciais.";
@@ -1319,7 +1316,7 @@
             document.getElementById('config-community-subtitle').value = window.siteConfig?.communitySubtitle || "Um espaço focado no desenvolvimento em rede.";
 
             document.getElementById('config-app-text').value = window.siteConfig?.appShareText || `📚 Conheça a nossa App!\nAceda a conteúdos exclusivos.`;
-            document.getElementById('config-community-url').value = window.siteConfig?.communityShareUrl || "https://chat.whatsapp.com/Gz85l2zmg3p20XsOqgzB0h";
+            document.getElementById('config-community-url').value = window.siteConfig?.communityShareUrl || "https://chat.whatsapp.com/";
             document.getElementById('config-community-text').value = window.siteConfig?.communityShareText || `🟢 Faça parte da nossa Comunidade no WhatsApp!\nReceba avisos em primeira mão.`;
         };
 
@@ -1374,7 +1371,7 @@
             if (navigator.share) { try { await navigator.share({ title: titleStr, text }); } catch(e) { window.copyToClipboardText(text); } } else { window.copyToClipboardText(text); }
         };
         window.shareCommunityLink = async () => {
-            const url = window.siteConfig?.communityShareUrl || "https://chat.whatsapp.com/Gz85l2zmg3p20XsOqgzB0h";
+            const url = window.siteConfig?.communityShareUrl || "https://chat.whatsapp.com/";
             const customText = window.siteConfig?.communityShareText || `🟢 Faça parte da nossa Comunidade no WhatsApp!\nReceba avisos em primeira mão.`;
             const text = `${customText}\n\nEntre por aqui: ${url}`;
             if (navigator.share) { try { await navigator.share({ title: "Comunidade da App", text }); } catch(e) { window.copyToClipboardText(text); } } else { window.copyToClipboardText(text); }
@@ -1396,8 +1393,8 @@
         window.renderPostsFeed = () => {
             const header = document.getElementById('feed-header'); 
             const container = document.getElementById('feed-container'); 
-            const hTitle = window.siteConfig?.homeTitle || "Desenvolvimento e Capacitação.";
-            const hSub = window.siteConfig?.homeSubtitle || "De Adolescentes e jovens - 9 a 17 anos.";
+            const hTitle = window.siteConfig?.homeTitle || "A Minha Plataforma";
+            const hSub = window.siteConfig?.homeSubtitle || "O seu espaço de aprendizagem.";
             
             if (window.currentCategoryFilter) {
                 header.innerHTML = `<div class="flex items-center gap-3"><button onclick="window.clearFilter()" class="p-3 sys-bg-surface sys-border border rounded-full hover:opacity-80 transition-colors cursor-pointer"><i data-lucide="arrow-left" class="w-5 h-5 sys-text-secondary"></i></button><h2 class="text-3xl font-black sys-text-primary">Pasta: ${window.currentCategoryFilter}</h2></div>`;
@@ -1474,4 +1471,51 @@
 
         window.openAdminLogin = () => { if(!document.getElementById('sidebar-menu').classList.contains('-translate-x-full')) window.toggleMobileMenu(); document.getElementById('login-modal').classList.remove('hidden'); document.getElementById('admin-password').value = ''; };
         window.closeAdminLogin = () => document.getElementById('login-modal').classList.add('hidden');
-        window.verifyPassword = () => { if (document.getElementById('admin-password
+        window.verifyPassword = () => { if (document.getElementById('admin-password').value === ADMIN_PASSWORD) { window.closeAdminLogin(); document.getElementById('dashboard-modal').classList.remove('hidden'); window.switchAdminTab('posts'); } else { document.getElementById('login-error').classList.remove('hidden'); } };
+        window.closeDashboard = () => document.getElementById('dashboard-modal').classList.add('hidden');
+        
+        window.renderAdminList = () => {
+            const list = document.getElementById('admin-posts-list');
+            list.innerHTML = window.blogPosts.map(p => 
+                `<div class="flex justify-between items-center p-4 border border-gray-200 rounded-xl bg-white shadow-sm">
+                    <div class="truncate mr-4 flex items-center gap-3 min-w-0">
+                        <span class="text-[10px] font-black px-2 py-0.5 rounded-full ${p.status === 'draft' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'} shrink-0">${(p.status || 'published').toUpperCase()}</span>
+                        <span class="font-bold text-gray-800 truncate">${p.title}</span>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <button onclick="window.editPost('${p.id}')" class="p-3 bg-blue-50 text-blue-900 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        <button onclick="window.deletePost('${p.id}')" class="p-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                </div>`
+            ).join('') || '<p class="text-center text-gray-400 py-6">Nenhum conteúdo publicado.</p>';
+            lucide.createIcons();
+        };
+
+        window.openEditor = () => { 
+            window.currentEditorId = 'post-fulltext';
+            const dbCats = window.siteCategories.map(c => c.name); const postCats = window.blogPosts.map(p => p.category).filter(c => c && c.trim() !== ''); const allCats = [...new Set([...dbCats, ...postCats])].sort();
+            const catSelect = document.getElementById('post-category'); catSelect.innerHTML = '<option value="">Sem Categoria</option>' + allCats.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('edit-post-id').value = ''; ['title', 'subtitle', 'image', 'youtube'].forEach(f => document.getElementById('post-'+f).value = ''); 
+            catSelect.value = ''; document.getElementById('post-fulltext').innerHTML = ''; document.getElementById('editor-modal').classList.remove('hidden'); document.getElementById('btn-delete-editor').classList.add('hidden'); 
+        };
+        
+        window.editPost = (id) => { 
+            window.currentEditorId = 'post-fulltext'; const p = window.blogPosts.find(x => x.id === id); 
+            const dbCats = window.siteCategories.map(c => c.name); const postCats = window.blogPosts.map(post => post.category).filter(c => c && c.trim() !== ''); const allCats = [...new Set([...dbCats, ...postCats])].sort();
+            const catSelect = document.getElementById('post-category'); catSelect.innerHTML = '<option value="">Sem Categoria</option>' + allCats.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('edit-post-id').value = p.id; document.getElementById('post-title').value = p.title; document.getElementById('post-subtitle').value = p.subtitle; 
+            catSelect.value = p.category || ''; document.getElementById('post-image').value = p.imageUrl || ''; document.getElementById('post-youtube').value = p.youtubeUrl || ''; document.getElementById('post-fulltext').innerHTML = p.fullText; 
+            document.getElementById('editor-modal').classList.remove('hidden'); document.getElementById('btn-delete-editor').classList.remove('hidden'); 
+        };
+        window.closeEditor = () => document.getElementById('editor-modal').classList.add('hidden');
+
+        window.execEditor = (cmd, val = null) => { document.execCommand(cmd, false, val); const el = document.getElementById(window.currentEditorId || 'post-fulltext'); if(el) el.focus(); };
+        window.insertEditorLink = () => { const url = prompt("URL:"); if(url) window.execEditor('createLink', url); };
+        window.insertEditorImage = () => { const url = prompt("Link da imagem:"); if (url) window.execEditor('insertHTML', `<img src="${window.getDriveImageUrl(url)}" class="w-full rounded-xl my-4 shadow-sm" />`); };
+        window.insertEditorVideo = () => { const url = prompt("Link do YouTube:"); const id = window.getYoutubeId(url); if (id) window.execEditor('insertHTML', `<div class="aspect-video w-full rounded-xl overflow-hidden my-4 shadow-sm"><iframe class="w-full h-full" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen></iframe></div>`); };
+        window.insertEditorButton = () => { const text = prompt("Texto do botão:"); if (!text) return; const url = prompt("Link de destino:"); if (!url) return; const safeUrl = url.startsWith('http') ? url : 'https://' + url; window.execEditor('insertHTML', `<div class="my-8 flex justify-center"><a href="${safeUrl}" target="_blank" class="sys-bg-accent font-black text-sm sm:text-base py-4 px-10 rounded-full shadow-2xl transition-all hover:scale-105 uppercase tracking-wide" style="color: #ffffff !important; text-decoration: none !important;">${text}</a></div><p><br></p>`); };
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
